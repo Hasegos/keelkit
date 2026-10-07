@@ -1,6 +1,6 @@
 {
   "name": "keelkit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "새 프로젝트에 CLAUDE.md, .claude/, docs/ 뼈대를 설치하고 대화로 채우는 Claude Code 플러그인. 삭제 확인, master 병합 차단, .env 보호를 hook으로 강제한다.",
   "author": {
     "name": "Hasegos"

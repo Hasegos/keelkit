@@ -1,10 +1,3 @@
----
-paths:
-  - "docs/**"
-  - "CLAUDE.md"
-  - ".claude/**"
----
-
 # 문서 규칙
 
 ## 1. 원본 문서
@@ -13,12 +6,12 @@ paths:
 
 | 내용 | 원본 |
 |---|---|
-| 목적, 진행 상황, 결정, 열린 질문 | `docs/ROADMAP.md` (`CLAUDE.md`는 요약만) |
+| 목적, 진행 상황, 결정, 열린 질문 | `docs/ROADMAP.md` (`AGENTS.md`, `CLAUDE.md`는 요약만) |
 | 구조, 데이터, 설계 결정과 근거 | `docs/ARCHITECTURE.md` |
 | 준비물, 실행 방법, `.env` 키 이름과 설명 | `docs/SETUP.md` |
-| 코드 규칙 | `.claude/rules/*.md` |
-| 반복 절차 | `.claude/skills/*` |
-| 반드시 지킬 금지 사항 | `.claude/hooks/*` (부탁하지 않고 시스템으로 막는다) |
+| 코드 규칙 | `docs/rules/*.md` |
+| 반복 절차 | skill (`.claude/skills/*` 또는 `.agents/skills/*`) |
+| 반드시 지킬 금지 사항 | hook (Claude: `.claude/hooks/*`. 부탁하지 않고 시스템으로 막는다) |
 
 ## 2. 쓰는 방식
 
@@ -26,5 +19,5 @@ paths:
 - 절은 `4번`, `1-2번`처럼 번호로 가리킨다.
 - 날짜는 절대 날짜(`2026-09-30`). "어제", "지난주" 금지.
 - 끝난 단계의 과거 계획은 지우고 결과만 남긴다. 결정은 "무엇을, 왜"를 한 줄로.
-- `CLAUDE.md`는 매번 읽히므로 200줄 안. 세부는 원본 문서로 보낸다.
+- `AGENTS.md`, `CLAUDE.md`는 매번 읽히므로 200줄 안. 세부는 원본 문서로 보낸다.
 - 필요한 절이 없으면 추가하고, 쓰지 않는 절은 지운다.
