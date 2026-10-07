@@ -1,8 +1,3 @@
----
-paths:
-  - "**/*.{py,ts,tsx,js,jsx,java,kt,go,rs,cs,rb,php,swift}"
----
-
 # 주석 규칙
 
 주석은 클래스와 함수(메서드) 단위로만 쓴다. 그 안쪽 코드에는 쓰지 않는다.

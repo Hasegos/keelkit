@@ -13,22 +13,64 @@ TEMPLATE      = PLUGIN_ROOT / "template"
 BACKUP_ROOT   = ".keel-backup"
 SETTINGS_REL  = ".claude/settings.json"
 IGNORE_LINES  = (".env", ".keel-backup/")
+MODES         = ("claude", "codex", "both", "delegate")
+DELEGATE_ONLY = ("shared/docs/rules/delegation.md", "shared/docs/plans/_TEMPLATE.md")
+SKILLS_NOTE   = {
+    "claude": "skill은 `.claude/skills/`에 있다.",
+    "codex" : "skill은 `.agents/skills/`에 있다.",
+    "both"  : "skill은 `.claude/skills/`(Claude)와 `.agents/skills/`(Codex)에 같은 내용으로 있다. 한쪽을 고치면 다른 쪽도 같이 고친다.",
+}
+DELEGATION_ROW = "| `docs/rules/delegation.md` | 설계 · 계획은 Claude, 구현 · 테스트는 Codex. 계획 파일 틀은 `docs/plans/_TEMPLATE.md` | 구현을 시작하기 전 |"
 
 
-def target_path(rel: Path) -> Path:
-    """템플릿 안 경로를 프로젝트 안 경로로 바꾼다. claude/ 는 .claude/, CLAUDE.md.tpl 은 CLAUDE.md 가 된다.
+def placements(mode: str) -> list[tuple[Path, Path]]:
+    """모드에 맞는 템플릿 파일과 프로젝트 안 경로의 짝을 만든다.
+
+    shared/ 는 프로젝트 루트로 가고(AGENTS.md.tpl 은 AGENTS.md), claude/ 는 .claude/ 로 간다(CLAUDE.md.tpl 은 루트의 CLAUDE.md).
+    claude/skills/ 는 codex 를 쓰면 .agents/skills/ 에도 복사한다. claude 모드는 AGENTS.md 를 만들지 않고 CLAUDE.md 에 그 내용을 담는다.
 
     Args:
-        rel: 템플릿 기준 상대 경로
+        mode: claude, codex, both, delegate 중 하나
     Returns:
-        프로젝트 기준 상대 경로
+        (템플릿 기준 상대 경로, 프로젝트 기준 상대 경로) 목록
     """
-    parts = list(rel.parts)
-    if parts[0] == "claude":
-        parts[0] = ".claude"
-    if parts[-1] == "CLAUDE.md.tpl":
-        parts[-1] = "CLAUDE.md"
-    return Path(*parts)
+    pairs = []
+    for source in sorted(TEMPLATE.rglob("*")):
+        if not source.is_file() or "__pycache__" in source.parts:
+            continue
+        rel   = source.relative_to(TEMPLATE)
+        parts = rel.parts
+        if parts[0] == "shared":
+            if rel.as_posix() in DELEGATE_ONLY and mode != "delegate":
+                continue
+            if parts[-1] == "AGENTS.md.tpl":
+                if mode != "claude":
+                    pairs.append((rel, Path("AGENTS.md")))
+                continue
+            pairs.append((rel, Path(*parts[1:])))
+        elif parts[0] == "claude":
+            if mode != "codex":
+                pairs.append((rel, Path("CLAUDE.md") if parts[-1] == "CLAUDE.md.tpl" else Path(".claude", *parts[1:])))
+            if parts[1] == "skills" and mode != "claude":
+                pairs.append((rel, Path(".agents", *parts[1:])))
+    return pairs
+
+
+def fill(text: str, variables: dict[str, str]) -> str:
+    """{{변수}} 를 값으로 바꾼다. 값이 빈 변수가 있는 줄은 줄째 지운다.
+
+    Args:
+        text: 템플릿 본문
+        variables: 변수 이름과 값
+    Returns:
+        변수를 채운 본문
+    """
+    for key, value in variables.items():
+        if value:
+            text = text.replace("{{" + key + "}}", value)
+        else:
+            text = re.sub(r"^.*\{\{" + re.escape(key) + r"\}\}.*\n", "", text, flags=re.M)
+    return text
 
 
 def github_repo(target: Path) -> str | None:
@@ -47,15 +89,25 @@ def github_repo(target: Path) -> str | None:
     return match.group(1) if match else None
 
 
-def project_variables(target: Path) -> dict[str, str]:
-    """스크립트가 확실히 알 수 있는 변수만 채운다. 나머지는 Claude 가 채운다.
+def project_variables(target: Path, mode: str) -> dict[str, str]:
+    """스크립트가 확실히 알 수 있는 변수만 채운다. 나머지는 AI 도구가 채운다.
+
+    shared 는 CLAUDE.md 에 들어갈 공통 지침이다. claude 모드는 AGENTS.md.tpl 본문을 그대로 담고, 나머지는 @AGENTS.md 로 가져온다.
 
     Args:
         target: 프로젝트 폴더
+        mode: claude, codex, both, delegate 중 하나
     Returns:
         변수 이름과 값
     """
-    values = {"name": target.name, "today": datetime.date.today().isoformat()}
+    shared = (TEMPLATE / "shared" / "AGENTS.md.tpl").read_text(encoding="utf-8") if mode == "claude" else "@AGENTS.md"
+    values = {
+        "shared"        : shared,
+        "skills_note"   : SKILLS_NOTE.get(mode, SKILLS_NOTE["both"]),
+        "delegation_row": DELEGATION_ROW if mode == "delegate" else "",
+        "name"          : target.name,
+        "today"         : datetime.date.today().isoformat(),
+    }
     repo = github_repo(target)
     if repo:
         values["repo"] = repo
@@ -92,20 +144,19 @@ def drop_skipped_hooks(text: str, skip: list[str]) -> str:
     return json.dumps(data, ensure_ascii=False, indent=2) + "\n"
 
 
-def render(rel: Path, variables: dict[str, str], skip: list[str]) -> str:
+def render(rel: Path, dest_rel: Path, variables: dict[str, str], skip: list[str]) -> str:
     """템플릿 파일을 읽어 변수를 채운다. 시스템에 python 이 없고 python3 만 있으면 hook 명령을 python3 으로 바꾼다.
 
     Args:
         rel: 템플릿 기준 상대 경로
+        dest_rel: 프로젝트 기준 상대 경로
         variables: 변수 이름과 값
         skip: 건너뛸 경로 목록. settings.json 에서 그 hook 을 뺀다
     Returns:
         변수를 채운 본문
     """
-    text = (TEMPLATE / rel).read_text(encoding="utf-8")
-    for key, value in variables.items():
-        text = text.replace("{{" + key + "}}", value)
-    if target_path(rel).as_posix() == SETTINGS_REL:
+    text = fill((TEMPLATE / rel).read_text(encoding="utf-8"), variables)
+    if dest_rel.as_posix() == SETTINGS_REL:
         if not shutil.which("python") and shutil.which("python3"):
             text = text.replace('"command": "python ', '"command": "python3 ')
         if skip:
@@ -137,27 +188,24 @@ def merge_settings(existing: dict, incoming: dict) -> dict:
     return merged
 
 
-def plan(target: Path, variables: dict[str, str], skip: list[str]) -> list[dict]:
-    """템플릿의 모든 파일을 프로젝트와 비교해서 처리 방식을 정한다.
+def plan(target: Path, variables: dict[str, str], skip: list[str], mode: str) -> list[dict]:
+    """모드에 맞는 템플릿 파일을 프로젝트와 비교해서 처리 방식을 정한다.
 
     Args:
         target: 프로젝트 폴더
         variables: 변수 이름과 값
         skip: 건너뛸 경로 목록 (기존 것을 유지할 때)
+        mode: claude, codex, both, delegate 중 하나
     Returns:
         파일별 {rel, status, text}. status 는 new, same, merge, conflict, skip 중 하나
     """
     entries = []
-    for source in sorted(TEMPLATE.rglob("*")):
-        if not source.is_file() or "__pycache__" in source.parts:
-            continue
-        rel      = source.relative_to(TEMPLATE)
-        dest_rel = target_path(rel)
-        dest     = target / dest_rel
+    for rel, dest_rel in placements(mode):
+        dest = target / dest_rel
         if is_skipped(dest_rel.as_posix(), skip):
             entries.append({"rel": dest_rel.as_posix(), "text": "", "status": "skip"})
             continue
-        text     = render(rel, variables, skip)
+        text     = render(rel, dest_rel, variables, skip)
         entry    = {"rel": dest_rel.as_posix(), "text": text, "status": "new"}
         if dest.exists():
             try:
@@ -247,7 +295,7 @@ def ensure_gitignore(target: Path, dry_run: bool) -> list[str]:
     return missing
 
 
-def report(entries: list[dict], ignored: list[str], target: Path, backup: Path, dry_run: bool) -> None:
+def report(entries: list[dict], ignored: list[str], target: Path, backup: Path, dry_run: bool, mode: str) -> None:
     """처리 결과를 출력한다.
 
     Args:
@@ -256,9 +304,10 @@ def report(entries: list[dict], ignored: list[str], target: Path, backup: Path, 
         ignored: .gitignore 에 추가한(추가할) 줄
         backup: 이번 실행의 백업 폴더
         dry_run: 미리보기 여부
+        mode: claude, codex, both, delegate 중 하나
     """
     labels = [("new", "새로 만듦"), ("same", "이미 같음"), ("merge", "자동으로 합침"), ("conflict", "직접 합쳐야 함"), ("skip", "건너뜀 (기존 유지)")]
-    print(f"keelkit 설치 {'미리보기' if dry_run else '결과'}: {target}")
+    print(f"keelkit 설치 {'미리보기' if dry_run else '결과'} (모드: {mode}): {target}")
     for status, label in labels:
         names = [e["rel"] for e in entries if e["status"] == status]
         if names:
@@ -281,7 +330,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--target", default=".", help="설치할 프로젝트 폴더 (기본: 현재 폴더)")
     parser.add_argument("--dry-run", action="store_true", help="파일을 쓰지 않고 계획만 출력한다")
-    parser.add_argument("--skip", nargs="*", default=[], help="설치하지 않을 경로 (프로젝트 기준, 폴더 가능). 기존 것을 유지할 때 쓴다")
+    parser.add_argument("--mode", choices=MODES, default="claude", help="claude, codex, both(둘 다 각자), delegate(Claude 설계 → Codex 구현). 기본: claude")
+    parser.add_argument("--skip", nargs="*", default=[], help="설치하지 않을 경로 (프로젝트 기준, 폴더 가능). 기존 것을 유지할 때 쓴다. 다른 옵션 뒤에 둔다")
     args   = parser.parse_args()
     target = Path(args.target).resolve()
     skip   = [s for s in (p.replace("\\", "/").strip("/") for p in args.skip) if s]
@@ -290,13 +340,16 @@ def main() -> int:
         print(f"설치할 수 없는 폴더입니다: {target}", file=sys.stderr)
         return 1
 
-    entries = plan(target, project_variables(target), skip)
+    variables = project_variables(target, args.mode)
+    if "docs/rules/delegation.md" in skip:
+        variables["delegation_row"] = ""
+    entries = plan(target, variables, skip, args.mode)
     stamp   = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     backup  = target / BACKUP_ROOT / stamp
     if not args.dry_run:
         apply(entries, target, backup)
     ignored = ensure_gitignore(target, args.dry_run)
-    report(entries, ignored, target, backup, args.dry_run)
+    report(entries, ignored, target, backup, args.dry_run, args.mode)
     return 0
 
 
