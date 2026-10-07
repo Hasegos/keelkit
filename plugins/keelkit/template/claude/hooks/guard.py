@@ -4,8 +4,15 @@ import subprocess
 import sys
 from pathlib import Path
 
-# 기존 프로젝트에 같은 검사가 이미 있어서 끌 검사 (coauthor, env, protected, delete). keelkit:init 이 정한다.
+# 기존 프로젝트에 같은 검사가 이미 있어서 끌 검사 (coauthor, env, protected, delete, noverify). keelkit:init 이 정한다.
 DISABLED       = set()
+QUOTED         = re.compile(r"\"[^\"]*\"|'[^']*'")
+NO_VERIFY      = (
+    re.compile(r"\bgit\b[^;&|]*\b(?:commit|push|merge)\b[^;&|]*--no-verify\b"),
+    re.compile(r"\bgit\b[^;&|]*\bcommit\b[^;&|]*\s-[a-zA-Z]*n[a-zA-Z]*(?=\s|$)"),
+    re.compile(r"\bgit\b[^;&|]*core\.hooksPath(?:=|\s+)(?!\.?/?\.githooks\b)"),
+    re.compile(r"\bHUSKY=0\b"),
+)
 PROTECTED      = ("master", "main")
 PROT           = r"(?:(?<![\w./-])|refs/heads/)(?:" + "|".join(PROTECTED) + r")(?![\w./-])"
 ENV_FILE       = re.compile(r"(?:^|/)\.env(?:\.[^/]+)?$")
@@ -87,6 +94,22 @@ def check_env(command: str, cwd: str | None) -> str | None:
     return reason if any(ENV_FILE.search(n) for n in names) else None
 
 
+def check_noverify(command: str) -> str | None:
+    """git hook 을 건너뛰는 명령이면 이유를 반환한다. 따옴표 안의 글자는 보지 않는다.
+
+    Args:
+        command: 실행하려는 명령
+    Returns:
+        차단 이유. 해당하지 않으면 None
+    """
+    if "noverify" in DISABLED:
+        return None
+    bare = QUOTED.sub('""', command)
+    if any(p.search(bare) for p in NO_VERIFY):
+        return "git hook 을 건너뛰는 옵션(--no-verify, -n, core.hooksPath 변경, HUSKY=0)은 쓰지 않는다 (사용자 규칙). hook 이 막은 이유를 고친 뒤 다시 실행하세요."
+    return None
+
+
 def check_block(command: str, cwd: str | None) -> str | None:
     """차단할 명령이면 이유를 반환한다.
 
@@ -99,7 +122,7 @@ def check_block(command: str, cwd: str | None) -> str | None:
     if "coauthor" not in DISABLED and re.search(r"\bgit\b.*\bcommit\b", command) and any(re.search(r"co-authored-by", t, re.I) for t in commit_message_texts(command)):
         return "커밋 메시지에 Co-Authored-By 를 넣지 않는다 (사용자 규칙). 그 줄을 빼고 다시 커밋하세요."
 
-    reason = check_env(command, cwd)
+    reason = check_noverify(command) or check_env(command, cwd)
     if reason:
         return reason
 
