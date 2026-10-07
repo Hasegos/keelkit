@@ -1,8 +1,8 @@
 # keelkit
 
-> 어떤 프로젝트든 같은 뼈대로 시작한다. 폴더를 열고 `/keelkit:init` 한 줄이면 `CLAUDE.md`, `.claude/`, `docs/`가 깔리고 Claude가 프로젝트를 읽어서 채운다.
+> 어떤 프로젝트든 같은 뼈대로 시작한다. 폴더를 열고 `/keelkit:init` 한 줄이면 `CLAUDE.md`(또는 `AGENTS.md`), `.claude/`(또는 `.agents/`), `docs/`가 깔리고 AI 도구가 프로젝트를 읽어서 채운다.
 
-Claude Code 플러그인. 특정 언어나 프레임워크에 묶이지 않는다.
+Claude Code 플러그인. Claude만, Codex만, 둘 다, 또는 Claude 설계 → Codex 구현 중 처음에 고른다. 특정 언어나 프레임워크에 묶이지 않는다.
 
 ## 설치
 
@@ -19,18 +19,34 @@ Claude Code 플러그인. 특정 언어나 프레임워크에 묶이지 않는�
 
 hook과 권한은 새 세션부터 적용된다.
 
-## 무엇이 깔리나
+## 모드
+
+`/keelkit:init`이 처음에 묻는다. 기존 파일로 추정되면 묻지 않는다.
+
+| # | 모드 | 의미 | 설치되는 것 |
+|---|---|---|---|
+| 1 | `claude` | Claude만 | `CLAUDE.md`, `.claude/`, `docs/` |
+| 2 | `codex` | Codex만 | `AGENTS.md`, `.agents/skills/`, `docs/` |
+| 3 | `both` | 둘 다, 각자 독립 | 1 + 2. 공통 지침은 `AGENTS.md` 한 곳이고 `CLAUDE.md`는 `@AGENTS.md`로 가져온다 |
+| 4 | `delegate` | 둘 다, Claude 설계 → Codex 구현 | 3 + `docs/rules/delegation.md` + `docs/plans/_TEMPLATE.md` |
+
+- 규칙 원본은 `docs/rules/`, 공통 지침 원본은 `AGENTS.md` 한 곳이다. 도구를 바꿔도 내용이 같다.
+- `delegate`: Claude가 `docs/plans/NNN.md`(계획 파일)를 쓰고 Codex가 구현 · 테스트한다. git(커밋, PR, 병합)과 삭제는 Claude가 한다. 위임에는 Codex 플러그인(`codex@openai-codex`)을 쓴다. keelkit이 설치하지 않고 안내만 한다.
+- hook(`guard.py`)은 Claude 전용이다. `codex` 모드는 규칙 문장으로만 지켜진다.
+- 모드를 바꾸려면 `init`을 다시 실행한다. 이전 모드의 파일은 지우지 않는다.
+
+## 무엇이 깔리나 (`claude` 모드)
 
 ```
 my-project/
 ├─ CLAUDE.md                 소개, 명령, 설정 지도 (매번 읽힘)
 ├─ docs/
+│  ├─ rules/                 진행 방식, 코드, 주석, 문서 규칙
 │  ├─ ROADMAP.md             목적, 진행 상황, 결정 기록
 │  ├─ ARCHITECTURE.md        구조와 설계 근거
 │  └─ SETUP.md               실행법, .env 키 이름
 └─ .claude/
    ├─ settings.json          권한 + hook 연결
-   ├─ rules/                 진행 방식, 코드, 주석, 문서 규칙
    ├─ skills/                harness(설정 채우기 · 변경), verify, commit-pr
    ├─ agents/                runner(긴 출력 요약), reviewer(큰 PR 검토)
    └─ hooks/                 guard.py, strip_eof.py
@@ -42,7 +58,7 @@ my-project/
 
 기존 파일은 지우거나 덮어쓰지 않는다. 파일 이름이 아니라 **기능** 단위로 겹침을 먼저 확인하고, 설치 전에 한 번만 묻는다.
 
-1. Claude가 기존 `CLAUDE.md`, `.claude/`, hook, `.husky` 등을 읽고 keelkit의 기능 15개와 대조한다.
+1. Claude가 기존 `CLAUDE.md`, `.claude/`, hook, `.husky` 등을 읽고 keelkit의 기능 17개와 대조한다.
 2. 기능마다 번호를 붙인 표로 보여준다: 겹침 · 내용 다름, 겹침 · 내용 같음, 없음.
 3. 기본값은 **기존 유지**다. 바꿀 번호만 말하면 된다 (예: "1번, 3번 keelkit으로". 없으면 "그대로").
 4. 겹치지 않는 기능만 설치한다. 기존을 지우는 선택은 한 번 더 확인하고 백업을 남긴다.
@@ -59,13 +75,14 @@ my-project/
 
 ## guard hook이 막는 것
 
-부탁이 아니라 동작으로 막는다.
+부탁이 아니라 동작으로 막는다. Claude 전용이다.
 
 | 상황 | 동작 |
 |---|---|
 | `master` / `main`에 merge, push, PR 병합 | 차단 |
 | 커밋 메시지에 `Co-Authored-By` | 차단 |
 | `.env` 커밋, `.env.*` 파일 생성 | 차단 |
+| `--no-verify`, `git commit -n`, `core.hooksPath` 변경, `HUSKY=0` | 차단 |
 | 파일, 폴더, 브랜치, 태그, 컨테이너 삭제, 강제 push | 사용자에게 확인 요청 |
 | `feature/` 브랜치 삭제 | 자동 허용 |
 
