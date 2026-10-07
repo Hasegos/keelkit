@@ -1,8 +1,3 @@
----
-paths:
-  - "**/*.{py,ts,tsx,js,jsx,go,rs,java,kt,cs,rb,php,swift}"
----
-
 # 코드 규칙
 
 ## 1. 구조
