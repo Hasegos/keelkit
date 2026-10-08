@@ -31,7 +31,7 @@ hook과 권한은 새 세션부터 적용된다.
 | 4 | `delegate` | 둘 다, Claude 설계 → Codex 구현 | 3 + `docs/rules/delegation.md` + `docs/plans/_TEMPLATE.md` |
 
 - 규칙 원본은 `docs/rules/`, 공통 지침 원본은 `AGENTS.md` 한 곳이다. 도구를 바꿔도 내용이 같다.
-- `delegate`: Claude가 `docs/plans/NNN.md`(계획 파일)를 쓰고 Codex가 구현 · 테스트한다. git(커밋, PR, 병합)과 삭제는 Claude가 한다. 위임에는 Codex 플러그인(`codex@openai-codex`)을 쓴다. keelkit이 설치하지 않고 안내만 한다.
+- `delegate`: Claude가 `docs/plans/NNN.md`(계획 파일)를 쓰고 Codex가 구현 · 테스트한다. git(커밋, PR, 병합)과 삭제는 Claude가 한다. 위임에는 Codex 플러그인(`codex@openai-codex`)과 Codex CLI(`@openai/codex`), 로그인이 필요하다. `init`이 빠진 것을 확인해서 안내만 하고 설치하지 않는다.
 - hook(`guard.py`)은 Claude 전용이다. `codex` 모드는 규칙 문장으로만 지켜진다.
 - 모드를 바꾸려면 `init`을 다시 실행한다. 이전 모드의 파일은 지우지 않는다.
 
