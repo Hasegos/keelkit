@@ -28,7 +28,10 @@ disable-model-invocation: true
 4. 둘 다, Claude 설계 → Codex 구현 (Claude가 계획 파일을 쓰고 Codex가 구현 · 테스트한다)
 ```
 
-- `delegate`이면 `claude plugin list`로 Codex 플러그인(`codex@openai-codex`)이 있는지 확인한다. 없으면 설치 명령(`/plugin marketplace add openai/codex-plugin-cc`, `/plugin install codex@openai-codex`)을 안내만 하고 직접 설치하지 않는다. 없어도 설치는 계속하고, 사용자가 Codex를 직접 실행해도 된다.
+- `delegate`이면 위임에 필요한 준비를 순서대로 확인하고, 빠진 것은 안내만 한다. 직접 설치하거나 로그인하지 않는다. 빠져 있어도 설치는 계속하고, 사용자가 Codex를 직접 실행해도 된다.
+  1. Codex 플러그인: `claude plugin list`에 `codex@openai-codex`가 있는지 본다. 없으면 `/plugin marketplace add openai/codex-plugin-cc`, `/plugin install codex@openai-codex` 후 `/reload-plugins`를 안내한다.
+  2. Codex CLI: `codex --version`을 실행한다. 명령이 없으면 `npm install -g @openai/codex`를 안내한다 (Node.js 18.18 이상).
+  3. 로그인과 연결: 위 둘이 있으면 `/codex:setup`을 안내한다. 로그인이 안 돼 있으면 사용자가 `!codex login`을 직접 실행한다.
 - 이후 `install.py`는 모두 `--mode <모드>`를 붙인다 (`--skip` 앞에).
 - 모드를 바꾸려면 `init`을 다시 실행해서 새 모드를 고른다. 이전 모드의 파일은 지우지 않는다.
 
