@@ -24,7 +24,6 @@
 | `docs/rules/code.md` | 구조, 같이 고칠 문서 | 코드 파일을 만질 때 |
 | `docs/rules/style.md` | 주석(언어별 표준 문서 주석, 번호 박스 헤더는 선택) | 코드 파일을 만질 때 |
 | `docs/rules/docs.md` | 원본 문서 표, 문서 쓰는 방식 | 문서를 만질 때 |
-{{delegation_row}}
 | skill `harness` | 설정 채우기, 규칙 · 절차 · 금지 사항 추가 · 변경 | `미정`이 있을 때, 설정 변경을 요청할 때 |
 | skill `verify` | 검증과 체크리스트 절차 | 구현을 마쳤을 때 |
 | skill `commit-pr` | `dev` 기준 브랜치, 커밋, PR(`gh`), squash 병합, 브랜치 삭제 | 커밋할 때 |

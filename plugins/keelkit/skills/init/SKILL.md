@@ -1,6 +1,6 @@
 ---
 name: init
-description: 현재 폴더에 keelkit 설정(CLAUDE.md 또는 AGENTS.md, .claude/ 또는 .agents/, docs/)을 설치한다. Claude만, Codex만, 둘 다, Claude 설계 → Codex 구현 중 모드를 먼저 고른다. 기존 프로젝트에 같은 기능이 이미 있는지 먼저 확인해 겹치는 것은 기존을 유지하고, 겹치지 않는 것만 설치한 뒤 프로젝트 내용을 채운다. 새 프로젝트를 시작하거나 기존 프로젝트에 keelkit을 붙일 때 쓴다.
+description: 현재 폴더에 keelkit 설정(CLAUDE.md 또는 AGENTS.md, .claude/ 또는 .agents/, docs/)을 설치한다. Claude만, Codex만, 둘 다 중 모드를 먼저 고른다. 기존 프로젝트에 같은 기능이 이미 있는지 먼저 확인해 겹치는 것은 기존을 유지하고, 겹치지 않는 것만 설치한 뒤 프로젝트 내용을 채운다. 새 프로젝트를 시작하거나 기존 프로젝트에 keelkit을 붙일 때 쓴다.
 disable-model-invocation: true
 ---
 
@@ -16,7 +16,7 @@ Claude Code와 Codex 플러그인이 이 파일을 함께 쓴다. 아래 `${CLAU
 
 현재 폴더가 프로젝트 루트인지 본다. 홈 폴더나 `~/.claude`이면 사용자에게 알리고 멈춘다.
 
-모드를 정한다. 모드는 `claude`, `codex`, `both`(둘 다, 각자 독립), `delegate`(Claude 설계 → Codex 구현) 중 하나다.
+모드를 정한다. 모드는 `claude`, `codex`, `both`(둘 다, 각자 독립) 중 하나다.
 
 - 사용자가 이미 말했으면 그대로 쓴다.
 - 아니면 기존 파일로 추정한다. `CLAUDE.md`나 `.claude/`만 있으면 `claude`, `AGENTS.md`나 `.agents/`만 있으면 `codex`, 둘 다 있으면 `both`다.
@@ -27,13 +27,8 @@ Claude Code와 Codex 플러그인이 이 파일을 함께 쓴다. 아래 `${CLAU
 1. Claude만
 2. Codex만
 3. 둘 다, 각자 독립 (작업마다 골라 쓴다. 같은 규칙과 docs를 공유한다)
-4. 둘 다, Claude 설계 → Codex 구현 (Claude가 계획 파일을 쓰고 Codex가 구현 · 테스트한다)
 ```
 
-- `delegate`이면 위임에 필요한 준비를 순서대로 확인하고, 빠진 것은 안내만 한다. 직접 설치하거나 로그인하지 않는다. 빠져 있어도 설치는 계속하고, 사용자가 Codex를 직접 실행해도 된다.
-  1. Codex 플러그인: `claude plugin list`에 `codex@openai-codex`가 있는지 본다. 없으면 `/plugin marketplace add openai/codex-plugin-cc`, `/plugin install codex@openai-codex` 후 `/reload-plugins`를 안내한다.
-  2. Codex CLI: `codex --version`을 실행한다. 명령이 없으면 `npm install -g @openai/codex`를 안내한다 (Node.js 18.18 이상).
-  3. 로그인과 연결: 위 둘이 있으면 `/codex:setup`을 안내한다. 로그인이 안 돼 있으면 사용자가 `!codex login`을 직접 실행한다.
 - 이후 `install.py`는 모두 `--mode <모드>`를 붙인다 (`--skip` 앞에).
 - 모드를 바꾸려면 `init`을 다시 실행해서 새 모드를 고른다. 이전 모드의 파일은 지우지 않는다.
 
@@ -67,7 +62,6 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/install.py" --mode <모드> --dry-run
 | 14 | 파일 끝 빈 줄 제거 | `hooks/strip_eof.py` | hook, `.editorconfig` | `--skip .claude/hooks/strip_eof.py` (`settings.json`에서 그 hook도 빠진다) |
 | 15 | 설정 채우기 · 변경 | `skills/harness` | skill | `--skip .claude/skills/harness .agents/skills/harness` (없는 쪽은 무시된다) |
 | 16 | hook 우회 차단 (`--no-verify` 등) | `guard.py` 검사 `noverify`, `workflow.md` 공통 항목 | hook, `.husky`, `CLAUDE.md` | `DISABLED`에 `noverify` |
-| 17 | Claude 설계 → Codex 구현 위임 (`delegate` 모드만) | `docs/rules/delegation.md`, `docs/plans/_TEMPLATE.md` | `docs/plans/`, rules, `CLAUDE.md`, `AGENTS.md`, skill | `--skip docs/rules/delegation.md docs/plans/_TEMPLATE.md` (`AGENTS.md`의 위임 행도 함께 빠진다) |
 
 판정은 세 가지다.
 
@@ -144,7 +138,7 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/install.py" --mode <모드> --skip <경로
 - 기능별 결과를 한 표로 알린다: 기존 유지, 새로 설치, 교체, 직접 확인 필요.
 - 남은 `{{`와 `미정` 위치를 목록으로 알린다.
 - 백업 폴더 `.keel-backup/`은 합친 결과를 확인한 뒤 사용자가 지운다 (삭제는 확인을 받는다).
-- `claude`, `both`, `delegate` 모드: hook과 권한은 새 세션부터 적용된다고 알린다. `init`을 돌리기 전에 폴더를 바꿨다면 새 세션을 열어야 hook 경로가 맞는다.
+- `claude`, `both` 모드: hook과 권한은 새 세션부터 적용된다고 알린다. `init`을 돌리기 전에 폴더를 바꿨다면 새 세션을 열어야 hook 경로가 맞는다.
 - `codex` 모드: 강제 장치(hook)가 없고 규칙으로만 지켜진다고 알린다.
-- `both`, `delegate` 모드: `.claude/skills/`와 `.agents/skills/`는 같은 내용의 복사본이다. 한쪽을 고치면 다른 쪽도 같이 고친다고 알린다.
+- `both` 모드: `.claude/skills/`와 `.agents/skills/`는 같은 내용의 복사본이다. 한쪽을 고치면 다른 쪽도 같이 고친다고 알린다.
 - `.claude/`, `docs/`, `CLAUDE.md`를 git에 올릴지는 사용자가 정한다.
