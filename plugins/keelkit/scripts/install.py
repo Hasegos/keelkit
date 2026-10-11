@@ -20,7 +20,17 @@ SKILLS_NOTE   = {
     "codex" : "skill은 `.agents/skills/`에 있다.",
     "both"  : "skill은 `.claude/skills/`(Claude)와 `.agents/skills/`(Codex)에 같은 내용으로 있다. 한쪽을 고치면 다른 쪽도 같이 고친다.",
 }
-DELEGATION_ROW = "| `docs/rules/delegation.md` | 설계 · 계획은 Claude, 구현 · 테스트는 Codex. 계획 파일 틀은 `docs/plans/_TEMPLATE.md` | 구현을 시작하기 전 |"
+CODEX_MAP      = """
+## Codex 설정 (`.agents/`)
+
+| 위치 | 내용 |
+|---|---|
+| `.agents/skills/harness` | 설정 채우기, 규칙 · 절차 변경 |
+| `.agents/skills/verify` | 검증과 체크리스트 |
+| `.agents/skills/commit-pr` | 브랜치, 커밋, PR |
+
+Codex에는 hook이 없다. 삭제 확인, master / main, `.env`, `--no-verify` 규칙은 `docs/rules/workflow.md` 문장으로만 지켜지니 어기지 않는다. `.agents/`는 Codex 샌드박스가 보호 경로로 다뤄서 skill을 고칠 때 권한 승인이 필요할 수 있다."""
+DELEGATION_ROW ="| `docs/rules/delegation.md` | 설계 · 계획은 Claude, 구현 · 테스트는 Codex. 계획 파일 틀은 `docs/plans/_TEMPLATE.md` | 구현을 시작하기 전 |"
 
 
 def placements(mode: str) -> list[tuple[Path, Path]]:
@@ -104,6 +114,7 @@ def project_variables(target: Path, mode: str) -> dict[str, str]:
     values = {
         "shared"        : shared,
         "skills_note"   : SKILLS_NOTE.get(mode, SKILLS_NOTE["both"]),
+        "codex_map"     : CODEX_MAP if mode != "claude" else "",
         "delegation_row": DELEGATION_ROW if mode == "delegate" else "",
         "name"          : target.name,
         "today"         : datetime.date.today().isoformat(),
@@ -275,17 +286,15 @@ def apply(entries: list[dict], target: Path, backup: Path) -> None:
 
 
 def ensure_gitignore(target: Path, dry_run: bool) -> list[str]:
-    """git 저장소의 .gitignore 에 .env 와 백업 폴더를 넣는다.
+    """.gitignore 에 .env 와 백업 폴더를 넣는다. 없으면 만든다. git init 전에 init 을 돌려도 빠지지 않는다.
 
     Args:
         target: 프로젝트 폴더
         dry_run: True 이면 쓰지 않고 추가할 줄만 계산한다
     Returns:
-        추가한(추가할) 줄. git 저장소가 아니면 빈 목록
+        추가한(추가할) 줄
     """
     path = target / ".gitignore"
-    if not path.exists() and not (target / ".git").exists():
-        return []
     current = path.read_text(encoding="utf-8") if path.exists() else ""
     lines   = {line.strip() for line in current.splitlines()}
     missing = [line for line in IGNORE_LINES if line not in lines]
