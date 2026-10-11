@@ -56,7 +56,7 @@ def git_out(args: list[str], cwd: str | None) -> str:
 
 
 def remote_is_empty(command: str, cwd: str | None) -> bool:
-    """git push 대상 원격에 브랜치가 하나도 없으면 True 를 반환한다. 빈 저장소의 첫 push(main 만들기)만 통과시키려는 예외다.
+    """git push 대상 원격에 브랜치가 하나도 없으면 True 를 반환한다. 빈 저장소의 첫 push(master 만들기)만 통과시키려는 예외다.
 
     Args:
         command: 실행하려는 명령
