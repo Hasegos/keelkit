@@ -1,7 +1,7 @@
 {
   "name": "keelkit",
-  "version": "0.3.1",
-  "description": "새 프로젝트에 AGENTS.md, .agents/, docs/ 뼈대를 설치하고 대화로 채우는 플러그인. Claude, Codex, 둘 다, Claude 설계 → Codex 구현 중 모드를 고른다.",
+  "version": "0.5.0",
+  "description": "새 프로젝트에 AGENTS.md, .agents/, docs/ 뼈대를 설치하고 대화로 채우는 플러그인. Claude와 Codex에서 같이 쓴다.",
   "author": {
     "name": "Hasegos"
   },
@@ -19,7 +19,7 @@
     "websiteURL": "https://github.com/Hasegos/keelkit",
     "defaultPrompt": [
       "이 폴더에 keelkit init 해줘",
-      "keelkit을 codex 모드로 설치해줘"
+      "keelkit init으로 이 프로젝트 뼈대를 설치해줘"
     ]
   }
 }

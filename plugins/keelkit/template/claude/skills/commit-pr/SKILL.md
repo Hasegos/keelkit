@@ -43,7 +43,7 @@ PR 작성과 병합은 `gh` CLI로 한다. 시작 전에 `gh auth status`로 확
 
 ## 3. PR
 
-변경이 아주 클 때만 PR 작성 전에 `reviewer` agent(Claude 모드에만 있다. 없으면 직접 `dev` 대비 diff를 읽어서)로 `dev` 대비 변경을 검토하고, 높음 · 중간 지적 사항은 고친 뒤 진행한다. 기준은 `git diff --shortstat dev...HEAD`에서 변경 파일 20개 이상 또는 변경 줄(추가 + 삭제) 500줄 이상이다. 그보다 작은 변경은 부르지 않는다.
+변경이 아주 클 때만 PR 작성 전에 `reviewer` agent(Claude에만 있다. 없으면 직접 `dev` 대비 diff를 읽어서)로 `dev` 대비 변경을 검토하고, 높음 · 중간 지적 사항은 고친 뒤 진행한다. 기준은 `git diff --shortstat dev...HEAD`에서 변경 파일 20개 이상 또는 변경 줄(추가 + 삭제) 500줄 이상이다. 그보다 작은 변경은 부르지 않는다.
 
 브랜치를 push한 뒤 만든다. 본문은 실제 diff와 맞는지 확인한다.
 
@@ -94,7 +94,7 @@ EOF
 ```
 
 - 병합 뒤 `git fetch` 후 `git log --format='%h %p | %s' origin/dev`로 부모가 1개인지 확인한다.
-- 대상이 `main` / `master`이면 병합하지 않는다. Claude 모드에서는 hook이 `gh pr merge`를 막고, 브라우저에서 병합 버튼을 누르는 것도 하지 않는다 (hook이 못 막으므로 규칙으로 지킨다).
+- 대상이 `main` / `master`이면 병합하지 않는다. Claude에서는 hook이 `gh pr merge`를 막고, 브라우저에서 병합 버튼을 누르는 것도 하지 않는다 (hook이 못 막으므로 규칙으로 지킨다).
 
 ## 5. 병합 뒤 브랜치 정리
 
@@ -102,4 +102,4 @@ EOF
 
 1. 원격: `--delete-branch`가 지운다. 저장소 설정 "Automatically delete head branches"가 켜져 있어도 된다. 남아 있으면 `git push origin --delete feature/<이름>`.
 2. 로컬: `git switch dev` → `git pull --ff-only` → 남아 있으면 `git branch -D feature/<이름>` → `git fetch --prune`. squash 병합은 git이 병합된 브랜치로 인식하지 못해서 `-d`가 아니라 `-D`를 쓴다.
-3. `feature/`로 시작하지 않는 브랜치(`dev`, `main` 등)는 삭제하지 않는다. 삭제가 필요하면 확인을 받는다 (Claude 모드에서는 hook이 확인을 요청한다).
+3. `feature/`로 시작하지 않는 브랜치(`dev`, `main` 등)는 삭제하지 않는다. 삭제가 필요하면 확인을 받는다 (Claude에서는 hook이 확인을 요청한다).
