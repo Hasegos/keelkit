@@ -55,6 +55,27 @@ def git_out(args: list[str], cwd: str | None) -> str:
         return ""
 
 
+def remote_is_empty(command: str, cwd: str | None) -> bool:
+    """git push 대상 원격에 브랜치가 하나도 없으면 True 를 반환한다. 빈 저장소의 첫 push(main 만들기)만 통과시키려는 예외다.
+
+    Args:
+        command: 실행하려는 명령
+        cwd: 실행 위치
+    Returns:
+        merge 없는 push 이고, 대상 원격을 조회했는데 브랜치가 없으면 True. 조회에 실패하면 False
+    """
+    if re.search(r"\bgit\b[^;&|]*\bmerge\b", command):
+        return False
+    match = re.search(r"\bgit\b[^;&|]*\bpush\b(?:\s+-\S+)*(?:\s+(\S+))?", command)
+    if not match:
+        return False
+    try:
+        done = subprocess.run(["git", "ls-remote", "--heads", match.group(1) or "origin"], cwd=cwd or None, capture_output=True, text=True, timeout=15)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return done.returncode == 0 and not done.stdout.strip()
+
+
 def commit_message_texts(command: str) -> list[str]:
     """git commit 명령 문자열과 -F / --file 로 넘긴 메시지 파일 내용을 모은다.
 
@@ -129,7 +150,7 @@ def check_block(command: str, cwd: str | None) -> str | None:
     if "protected" in DISABLED:
         return None
 
-    if re.search(r"\bgit\b[^;&|]*\b(?:merge|push)\b", command):
+    if re.search(r"\bgit\b[^;&|]*\b(?:merge|push)\b", command) and not remote_is_empty(command, cwd):
         pushes_protected = re.search(r"\bgit\b[^;&|]*\bpush\b[^;&|]*" + PROT, command)
         switches_to      = re.search(r"\bgit\s+(?:checkout|switch)\s+(?:-\S+\s+)*" + PROT, command)
         switches_away    = re.search(r"\bgit\s+(?:checkout|switch)\b", command) and not switches_to
