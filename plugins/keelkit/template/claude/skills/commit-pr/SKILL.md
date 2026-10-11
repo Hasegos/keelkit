@@ -5,7 +5,7 @@ description: 기능 구현을 마친 뒤 dev 기준으로 브랜치를 만들고
 
 # 커밋 · PR 절차
 
-저장소 `{{repo}}`. 기준 브랜치는 항상 `dev`. 기능 구현과 검증(`verify`)이 끝나면 묻지 않고 커밋 · push · PR · dev 병합까지 한다 (`docs/rules/workflow.md` 1번). 작성자는 git 설정 그대로, AI 도구 표시 줄(`Co-Authored-By` 등)은 넣지 않는다. `.env` 계열 파일은 커밋하지 않는다 (hook이 막는다).
+저장소는 `git remote get-url origin`으로 확인한다. 기준 브랜치는 항상 `dev`. 기능 구현과 검증(`verify`)이 끝나면 묻지 않고 커밋 · push · PR · dev 병합까지 한다 (`docs/rules/workflow.md` 1번). 작성자는 git 설정 그대로, AI 도구 표시 줄(`Co-Authored-By` 등)은 넣지 않는다. `.env` 계열 파일은 커밋하지 않는다 (hook이 막는다).
 
 ## 0. gh 준비
 
@@ -16,15 +16,28 @@ PR 작성과 병합은 `gh` CLI로 한다. 시작 전에 `gh auth status`로 확
 
 ## 1. 브랜치
 
-1. `git fetch origin` 후 `dev`가 있는지 확인한다.
-2. `dev`가 없으면 기본 브랜치(`main` 또는 `master`)에서 만들어 올린다: `git switch -c dev origin/<기본 브랜치>` → `git push -u origin dev`.
-3. `git switch dev` → `git pull --ff-only` → `git switch -c feature/{{short_name}}-<기능>`. 기능 이름은 kebab-case (예: `feature/cs-flow-login`).
-4. 브랜치는 기능 하나당 하나. 브랜치를 겹쳐 쌓지 않는다. squash 병합 뒤에는 앞 브랜치 커밋이 `dev` 이력에 없어서 뒤 브랜치 PR에 다시 나타난다.
-5. 커밋 직전 `git branch --show-current`로 기능 브랜치인지 확인한다.
+1. `git remote get-url origin`으로 원격이 있는지 보고, 없으면 사용자에게 저장소 URL을 묻는다. 있으면 `git ls-remote --heads origin`으로 브랜치가 있는지 확인한다.
+2. 원격이 비어 있으면(브랜치가 하나도 없으면) `dev` 앞에 기본 브랜치부터 만든다. 작업 파일은 그대로 두고 빈 커밋만 올린다. 이 경우에만 `main` push가 허용된다 (`workflow.md`, hook도 원격이 비어 있을 때만 통과시킨다).
+
+   ```bash
+   git init -b main                                  # 이미 저장소이면 건너뛴다
+   git commit --allow-empty -m "ADD 저장소 초기화"
+   git push -u origin main
+   git switch -c dev
+   git push -u origin dev
+   ```
+
+   `dev`만 만들고 `main`을 건너뛰지 않는다. 첫 push한 `main`이 GitHub 기본 브랜치가 된다. 이미 커밋이 있는 로컬 저장소이면 빈 커밋은 만들지 않고 그 브랜치를 그대로 push한다.
+3. 원격에 `dev`가 없고 기본 브랜치(`main` 또는 `master`)만 있으면 거기서 만들어 올린다: `git switch -c dev origin/<기본 브랜치>` → `git push -u origin dev`.
+4. `git switch dev` → `git pull --ff-only` → `git switch -c feature/<기능>`. 기능 이름은 kebab-case (예: `feature/login`). 처음 올리는 작업도 `dev`에 바로 커밋하지 않고 기능 브랜치에서 PR로 올린다.
+5. 브랜치는 기능 하나당 하나. 브랜치를 겹쳐 쌓지 않는다. squash 병합 뒤에는 앞 브랜치 커밋이 `dev` 이력에 없어서 뒤 브랜치 PR에 다시 나타난다.
+6. 커밋 직전 `git branch --show-current`로 기능 브랜치인지 확인한다.
 
 ## 2. 커밋
 
 - 파일 · 단위별로 작게 나눈다. 제목은 `ADD <대상> 추가` / `FIX <대상> 수정` / `DELETE <대상> 삭제` 한 줄.
+- 처음 올리는 작업도 똑같이 나눈다. 예: keelkit 설정(`AGENTS.md`, `.agents/`, `docs/`), 앱 코드, 테스트를 각각 다른 커밋으로. `git add -A`와 `git add .`는 쓰지 않고 파일이나 폴더를 이름으로 지정해서 add한다. 한 커밋에 서로 다른 단위를 섞지 않는다.
+- Codex 샌드박스가 `.git` 쓰기에 권한 승인을 요구해도 커밋을 한 번에 합치지 않는다. 단위마다 승인을 받고 나눠서 커밋한다.
 - 본문은 빈 줄 뒤에 한두 줄로 "무엇을 왜".
 - 여러 줄 메시지는 `git commit -F -` + heredoc.
 
