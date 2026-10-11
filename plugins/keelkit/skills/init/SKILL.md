@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # keelkit 설치
 
+Claude Code와 Codex 플러그인이 이 파일을 함께 쓴다. 아래 `${CLAUDE_PLUGIN_ROOT}`는 플러그인 루트이고, Codex에서는 이 `SKILL.md`가 있는 폴더의 두 단계 위(`../..`, `scripts/`가 있는 폴더)로 읽는다. Claude 전용 명령(`claude plugin list`)은 Claude에서만 쓴다.
+
 현재 폴더(프로젝트 루트)에 keelkit을 설치하고, 기존 것과 겹치는 기능을 정리하고, 프로젝트에 맞게 채운다. 기존 내용은 삭제하거나 요약하지 않는다.
 
 원칙: 같은 기능은 한 곳에만 둔다. 겹치면 기존을 유지하고 keelkit 쪽을 설치하지 않는다. 사용자가 고른 것만 바꾼다. 설치한 뒤에 "겹쳤으니 고쳐 달라"는 말이 나오지 않게, 쓰기 전에 정한다.
