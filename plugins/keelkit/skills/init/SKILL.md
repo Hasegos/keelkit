@@ -116,6 +116,7 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/install.py" --mode <모드> --skip <경로
 - `guard.py`는 파일을 합치지 않는다. 방금 만든 파일의 맨 위 `DISABLED = set()`에 끌 검사 ID를 넣는다 (예: `DISABLED = {"env", "delete"}`). 기존 hook 코드는 건드리지 않는다. 고친 뒤 `python -m py_compile .claude/hooks/guard.py`로 확인한다.
 - `workflow.md`처럼 한 파일에 여러 기능이 들어 있으면, 기존 유지로 정한 기능의 행이나 절만 방금 만든 그 파일에서 뺀다.
 - 사용자가 keelkit으로 바꾸기로 한 기능은 `.keel-backup/<시각>/original/`에 기존 것을 복사해 두었는지 확인한 뒤, 기존 쪽의 해당 규칙을 지우고 keelkit 것을 둔다.
+- 스크립트가 `.gitignore`에 `.env`, `.keel-backup/`, `docs/`와 모드에 맞는 설정 경로(`CLAUDE.md`, `.claude/`, `AGENTS.md`, `.agents/`)를 넣는다. 이미 git이 추적 중인 경로는 넣지 않고 출력에 알린다. 그 경로가 있으면 사용자에게 알린다.
 - `codex` 모드에는 `.claude/`가 없으므로 `guard.py`와 hook 기능(표의 2, 3, 4, 5, 14, 16번)이 설치되지 않는다. 이 기능은 규칙 문장(`docs/rules/workflow.md`)으로만 지켜진다고 사용자에게 알린다.
 - 스크립트는 `.claude/settings.json`을 JSON으로 더한다. 1번을 기존 유지로 정했다면, 더해진 `allow` 항목을 백업 원본(`original/.claude/settings.json`)과 비교해서 되돌린다.
 - `CLAUDE.md`의 `규칙과 절차` 표와 `Claude 전용 설정` 표에서 건너뛴 기능의 행은 뺀다. 없는 파일을 가리키지 않게 한다.

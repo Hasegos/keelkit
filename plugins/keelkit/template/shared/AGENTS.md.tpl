@@ -30,6 +30,7 @@
 | skill `commit-pr` | `dev` 기준 브랜치, 커밋, PR(`gh`), squash 병합, 브랜치 삭제 | 커밋할 때 |
 
 {{skills_note}}
+{{codex_map}}
 
 ## 문서
 

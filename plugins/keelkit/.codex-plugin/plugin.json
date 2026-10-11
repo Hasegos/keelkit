@@ -1,6 +1,6 @@
 {
   "name": "keelkit",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "새 프로젝트에 AGENTS.md, .agents/, docs/ 뼈대를 설치하고 대화로 채우는 플러그인. Claude, Codex, 둘 다, Claude 설계 → Codex 구현 중 모드를 고른다.",
   "author": {
     "name": "Hasegos"
