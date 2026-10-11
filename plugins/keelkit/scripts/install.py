@@ -13,14 +13,25 @@ TEMPLATE      = PLUGIN_ROOT / "template"
 BACKUP_ROOT   = ".keel-backup"
 SETTINGS_REL  = ".claude/settings.json"
 IGNORE_LINES  = (".env", ".keel-backup/")
-MODES         = ("claude", "codex", "both", "delegate")
+INSTALLED_IGNORE = {"claude": ("CLAUDE.md", ".claude/"), "codex": ("AGENTS.md", ".agents/")}
+MODES        = ("claude", "codex", "both", "delegate")
 DELEGATE_ONLY = ("shared/docs/rules/delegation.md", "shared/docs/plans/_TEMPLATE.md")
 SKILLS_NOTE   = {
     "claude": "skill은 `.claude/skills/`에 있다.",
     "codex" : "skill은 `.agents/skills/`에 있다.",
     "both"  : "skill은 `.claude/skills/`(Claude)와 `.agents/skills/`(Codex)에 같은 내용으로 있다. 한쪽을 고치면 다른 쪽도 같이 고친다.",
 }
-DELEGATION_ROW = "| `docs/rules/delegation.md` | 설계 · 계획은 Claude, 구현 · 테스트는 Codex. 계획 파일 틀은 `docs/plans/_TEMPLATE.md` | 구현을 시작하기 전 |"
+CODEX_MAP      = """
+## Codex 설정 (`.agents/`)
+
+| 위치 | 내용 |
+|---|---|
+| `.agents/skills/harness` | 설정 채우기, 규칙 · 절차 변경 |
+| `.agents/skills/verify` | 검증과 체크리스트 |
+| `.agents/skills/commit-pr` | 브랜치, 커밋, PR |
+
+Codex에는 hook이 없다. 삭제 확인, master / main, `.env`, `--no-verify` 규칙은 `docs/rules/workflow.md` 문장으로만 지켜지니 어기지 않는다. `.agents/`는 Codex 샌드박스가 보호 경로로 다뤄서 skill을 고칠 때 권한 승인이 필요할 수 있다."""
+DELEGATION_ROW ="| `docs/rules/delegation.md` | 설계 · 계획은 Claude, 구현 · 테스트는 Codex. 계획 파일 틀은 `docs/plans/_TEMPLATE.md` | 구현을 시작하기 전 |"
 
 
 def placements(mode: str) -> list[tuple[Path, Path]]:
@@ -104,6 +115,7 @@ def project_variables(target: Path, mode: str) -> dict[str, str]:
     values = {
         "shared"        : shared,
         "skills_note"   : SKILLS_NOTE.get(mode, SKILLS_NOTE["both"]),
+        "codex_map"     : CODEX_MAP if mode != "claude" else "",
         "delegation_row": DELEGATION_ROW if mode == "delegate" else "",
         "name"          : target.name,
         "today"         : datetime.date.today().isoformat(),
@@ -274,34 +286,45 @@ def apply(entries: list[dict], target: Path, backup: Path) -> None:
             write_text(dest, entry["text"])
 
 
-def ensure_gitignore(target: Path, dry_run: bool) -> list[str]:
-    """git 저장소의 .gitignore 에 .env 와 백업 폴더를 넣는다.
+def ensure_gitignore(target: Path, dry_run: bool, mode: str) -> tuple[list[str], list[str]]:
+    """.gitignore 에 .env, 백업 폴더, keelkit 이 설치하는 경로를 넣는다. 없으면 만든다. git init 전에 init 을 돌려도 빠지지 않는다.
+
+    설치하는 경로는 이미 git 이 추적 중이면 넣지 않는다. 넣어도 추적은 풀리지 않아서 혼란만 생긴다.
 
     Args:
         target: 프로젝트 폴더
         dry_run: True 이면 쓰지 않고 추가할 줄만 계산한다
+        mode: claude, codex, both, delegate 중 하나
     Returns:
-        추가한(추가할) 줄. git 저장소가 아니면 빈 목록
+        (추가한(추가할) 줄, 이미 추적 중이라 넣지 않은 경로)
     """
-    path = target / ".gitignore"
-    if not path.exists() and not (target / ".git").exists():
-        return []
-    current = path.read_text(encoding="utf-8") if path.exists() else ""
-    lines   = {line.strip() for line in current.splitlines()}
-    missing = [line for line in IGNORE_LINES if line not in lines]
+    path      = target / ".gitignore"
+    current   = path.read_text(encoding="utf-8") if path.exists() else ""
+    lines     = {line.strip() for line in current.splitlines()}
+    installed = ["docs/"]
+    for tool, paths in INSTALLED_IGNORE.items():
+        if mode in (tool, "both", "delegate"):
+            installed += paths
+    try:
+        tracked = [p for p in installed if subprocess.run(["git", "-C", str(target), "ls-files", "--", p], capture_output=True, text=True, timeout=10).stdout.strip()]
+    except (OSError, subprocess.SubprocessError):
+        tracked = []
+    missing = [line for line in (*IGNORE_LINES, *installed) if line not in lines and line not in tracked]
     if missing and not dry_run:
         prefix = "" if not current or current.endswith("\n") else "\n"
-        write_text(path, current + prefix + "\n".join(missing) + "\n")
-    return missing
+        header = "" if "# keelkit" in lines else "# keelkit\n"
+        write_text(path, current + prefix + header + "\n".join(missing) + "\n")
+    return missing, tracked
 
 
-def report(entries: list[dict], ignored: list[str], target: Path, backup: Path, dry_run: bool, mode: str) -> None:
+def report(entries: list[dict], ignored: list[str], tracked: list[str], target: Path, backup: Path, dry_run: bool, mode: str) -> None:
     """처리 결과를 출력한다.
 
     Args:
         entries: plan 결과
         target: 프로젝트 폴더
         ignored: .gitignore 에 추가한(추가할) 줄
+        tracked: 이미 git 이 추적 중이라 .gitignore 에 넣지 않은 경로
         backup: 이번 실행의 백업 폴더
         dry_run: 미리보기 여부
         mode: claude, codex, both, delegate 중 하나
@@ -318,6 +341,8 @@ def report(entries: list[dict], ignored: list[str], target: Path, backup: Path, 
         print(f"\n백업: {backup.relative_to(target).as_posix()}/original (기존 파일), {backup.relative_to(target).as_posix()}/incoming (keelkit 파일)")
     if ignored:
         print(f"\n.gitignore {'에 추가할 줄' if dry_run else '에 추가함'}: {', '.join(ignored)}")
+    if tracked:
+        print(f"\n이미 추적 중이라 .gitignore에 넣지 않음: {', '.join(tracked)}")
 
 
 def main() -> int:
@@ -348,8 +373,8 @@ def main() -> int:
     backup  = target / BACKUP_ROOT / stamp
     if not args.dry_run:
         apply(entries, target, backup)
-    ignored = ensure_gitignore(target, args.dry_run)
-    report(entries, ignored, target, backup, args.dry_run, args.mode)
+    ignored, tracked = ensure_gitignore(target, args.dry_run, args.mode)
+    report(entries, ignored, tracked, target, backup, args.dry_run, args.mode)
     return 0
 
 

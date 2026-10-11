@@ -17,7 +17,6 @@ description: 프로젝트의 AI 도구 설정(AGENTS.md, CLAUDE.md, docs, rules,
    | 무엇을 만드나, 누가 쓰나 | `AGENTS.md`(Claude만 쓰면 `CLAUDE.md`) 소개, `docs/ROADMAP.md` 1번 |
    | 핵심 흐름 (입력 → 처리 → 결과) | `docs/ROADMAP.md` 2번 (Mermaid) |
    | 진행 방식은 `docs/rules/workflow.md` 1번의 기본값(묻지 않고 진행, 삭제는 확인, master / main 제외)을 알려주고, 바꿀 것만 묻는다 | `docs/rules/workflow.md` 1번 |
-   | 브랜치 이름에 쓸 짧은 이름 (제안: 폴더명을 소문자 kebab-case로 줄인 것, 예: `cs-flow`) | `commit-pr` skill의 `{{short_name}}` |
 
 3. 해당하는 주제만 추가로 묻는다. 프로젝트에 없는 주제는 묻지 않는다.
 
@@ -33,7 +32,7 @@ description: 프로젝트의 AI 도구 설정(AGENTS.md, CLAUDE.md, docs, rules,
    | 테스트 · 배포 | 방법과 순서 | `skills/verify`, `skills/deploy` |
 
 4. 채운다.
-   - 프로젝트 전체에서 `{{`와 `미정`을 검색해서 나온 곳을 모두 채운다 (`AGENTS.md` 또는 `CLAUDE.md`, `docs/`(rules 포함), skill `commit-pr`).
+   - 프로젝트 전체에서 `{{`와 `미정`을 검색해서 나온 곳을 모두 채운다 (`AGENTS.md` 또는 `CLAUDE.md`, `docs/`(rules 포함)). skill 파일에는 프로젝트 값이 없으므로 고치지 않는다 (Codex 샌드박스는 `.agents/`를 보호 경로로 다룬다).
    - 사용자가 답한 주제는 3번 표의 위치에 파일로 만든다. 사용자가 한 답만 규칙으로 쓴다.
    - `AGENTS.md`의 규칙 표에 그 규칙을 읽는 때(어떤 파일을 만질 때인지)를 적는다.
    - `.gitignore`에 `.env`가 없으면 추가한다. `.env`는 하나만 쓰므로 `.env.*`는 추가하지 않는다. 이미 추적 중인 `.env*` 파일이나 `.env.example` 같은 파일이 있으면 사용자에게 알린다 (합치거나 추적 해제하는 것은 삭제이므로 확인을 받는다).

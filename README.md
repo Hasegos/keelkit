@@ -80,7 +80,8 @@ my-project/
 | `.claude/settings.json` | 기존 권한과 hook은 유지하고 keelkit 것만 추가한다 |
 | `guard.py`의 검사 중 일부가 겹침 | 그 검사만 끈다. 기존 hook 코드는 건드리지 않는다 |
 
-- `.gitignore`에는 `.env`와 `.keel-backup/`만 추가한다.
+- `.gitignore`에는 `.env`, `.keel-backup/`과 keelkit이 설치하는 경로를 추가한다: `docs/`, 모드에 따라 `CLAUDE.md`와 `.claude/`, `AGENTS.md`와 `.agents/`. `git init` 전이라 `.gitignore`가 없어도 만든다.
+- 이미 git이 추적 중인 경로는 넣지 않고 알린다. 설정 파일을 저장소에 올리고 싶으면 `.gitignore`에서 그 줄을 지운다.
 - 합친 결과를 확인한 뒤 `.keel-backup/`은 직접 지운다.
 
 ## guard hook이 막는 것
@@ -89,7 +90,7 @@ my-project/
 
 | 상황 | 동작 |
 |---|---|
-| `master` / `main`에 merge, push, PR 병합 | 차단 |
+| `master` / `main`에 merge, push, PR 병합 | 차단. 원격에 브랜치가 하나도 없을 때의 첫 push(`master` 만들기)만 통과 |
 | 커밋 메시지에 `Co-Authored-By` | 차단 |
 | `.env` 커밋, `.env.*` 파일 생성 | 차단 |
 | `--no-verify`, `git commit -n`, `core.hooksPath` 변경, `HUSKY=0` | 차단 |
@@ -99,7 +100,7 @@ my-project/
 ## 기본 진행 규칙
 
 - 프로젝트 안 작업(수정, 실행, 브랜치, 커밋, push, PR)은 묻지 않고 진행한다.
-- 기준 브랜치는 `dev`, 작업 브랜치는 `feature/<짧은이름>-<기능>`.
+- 기준 브랜치는 `dev`, 작업 브랜치는 `feature/<기능>`. 원격이 비어 있으면 빈 커밋으로 `master`를 먼저 만들고 `dev`, `feature/<기능>` 순서로 간다.
 - 커밋은 `ADD` / `FIX` / `DELETE <대상> 추가/수정/삭제`.
 - PR은 `gh`로 만들고 squash 병합한다. `master` / `main` 병합은 사용자가 직접 한다.
 - `.env`는 한 개만 쓴다. 키 이름만 `docs/SETUP.md`에 적고 값은 적지 않는다.
