@@ -19,6 +19,16 @@ Claude Code 플러그인. Claude만, Codex만, 둘 다, 또는 Claude 설계 →
 
 hook과 권한은 새 세션부터 적용된다.
 
+### Codex에서 설치
+
+같은 저장소가 Codex 플러그인도 겸한다 (`.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`). `init` skill은 Claude와 같은 파일을 쓴다.
+
+```bash
+codex plugin marketplace add Hasegos/keelkit
+```
+
+Codex에서 keelkit 플러그인을 설치하고 프로젝트 폴더를 연 뒤 "이 폴더에 keelkit init 해줘"라고 말한다. `$init`으로 직접 부를 수도 있다. Codex에는 hook이 없으므로 `codex` 모드의 금지 규칙은 문장으로만 지켜진다.
+
 ## 모드
 
 `/keelkit:init`이 처음에 묻는다. 기존 파일로 추정되면 묻지 않는다.
