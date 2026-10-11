@@ -1,8 +1,8 @@
 # keelkit
 
-> 어떤 프로젝트든 같은 뼈대로 시작한다. 폴더를 열고 `/keelkit:init` 한 줄이면 `CLAUDE.md`(또는 `AGENTS.md`), `.claude/`(또는 `.agents/`), `docs/`가 깔리고 AI 도구가 프로젝트를 읽어서 채운다.
+> 어떤 프로젝트든 같은 뼈대로 시작한다. 폴더를 열고 `/keelkit:init` 한 줄이면 `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.agents/`, `docs/`가 깔리고 AI 도구가 프로젝트를 읽어서 채운다.
 
-Claude Code 플러그인. Claude만, Codex만, 또는 둘 다 중 처음에 고른다. 특정 언어나 프레임워크에 묶이지 않는다.
+Claude Code와 Codex에서 같이 쓰는 플러그인. 어느 쪽에서 `init`을 돌려도 결과가 같고, 특정 언어나 프레임워크에 묶이지 않는다.
 
 ## 설치
 
@@ -27,33 +27,29 @@ hook과 권한은 새 세션부터 적용된다.
 codex plugin marketplace add Hasegos/keelkit
 ```
 
-Codex에서 keelkit 플러그인을 설치하고 프로젝트 폴더를 연 뒤 "이 폴더에 keelkit init 해줘"라고 말한다. `$init`으로 직접 부를 수도 있다. Codex에는 hook이 없으므로 `codex` 모드의 금지 규칙은 문장으로만 지켜진다.
+Codex에서 keelkit 플러그인을 설치하고 프로젝트 폴더를 연 뒤 "이 폴더에 keelkit init 해줘"라고 말한다. `$init`으로 직접 부를 수도 있다. Codex에는 hook이 없으므로 금지 규칙은 문장으로만 지켜진다.
 
-## 모드
+## Claude와 Codex 둘 다
 
-`/keelkit:init`이 처음에 묻는다. 기존 파일로 추정되면 묻지 않는다.
+도구를 고르는 질문은 없다. 항상 둘 다 설치하고, 어느 쪽에서 실행해도 같다.
 
-| # | 모드 | 의미 | 설치되는 것 |
-|---|---|---|---|
-| 1 | `claude` | Claude만 | `CLAUDE.md`, `.claude/`, `docs/` |
-| 2 | `codex` | Codex만 | `AGENTS.md`, `.agents/skills/`, `docs/` |
-| 3 | `both` | 둘 다, 각자 독립 | 1 + 2. 공통 지침은 `AGENTS.md` 한 곳이고 `CLAUDE.md`는 `@AGENTS.md`로 가져온다 |
+- 규칙 원본은 `docs/rules/`, 공통 지침 원본은 `AGENTS.md` 한 곳이다. `CLAUDE.md`는 `@AGENTS.md`로 그것을 가져온다. 도구를 바꿔도 내용이 같다.
+- skill은 `.claude/skills/`와 `.agents/skills/`에 같은 내용으로 복사된다. 한쪽을 고치면 다른 쪽도 같이 고친다.
+- hook(`guard.py`)은 Claude 전용이다. Codex는 같은 규칙을 문장으로만 지킨다.
+- Claude에서 Codex 플러그인(`/codex:rescue`)으로 작업을 그때그때 맡길 수 있다. keelkit은 이 위임을 설치하거나 규칙으로 정하지 않는다.
 
-- 규칙 원본은 `docs/rules/`, 공통 지침 원본은 `AGENTS.md` 한 곳이다. 도구를 바꿔도 내용이 같다.
-- Claude에서 Codex 플러그인(`/codex:rescue`)으로 작업을 그때그때 맡기는 것은 Claude를 쓰는 모드(`claude`, `both`)에서 쓸 수 있다. keelkit은 이 위임을 설치하거나 규칙으로 정하지 않는다.
-- hook(`guard.py`)은 Claude 전용이다. `codex` 모드는 규칙 문장으로만 지켜진다.
-- 모드를 바꾸려면 `init`을 다시 실행한다. 이전 모드의 파일은 지우지 않는다.
-
-## 무엇이 깔리나 (`claude` 모드)
+## 무엇이 깔리나
 
 ```
 my-project/
-├─ CLAUDE.md                 소개, 명령, 설정 지도 (매번 읽힘)
+├─ AGENTS.md                 공통 지침: 소개, 명령, 규칙 표 (Claude와 Codex가 읽음)
+├─ CLAUDE.md                 @AGENTS.md + Claude 전용 설정 지도
 ├─ docs/
 │  ├─ rules/                 진행 방식, 코드, 주석, 문서 규칙
 │  ├─ ROADMAP.md             목적, 진행 상황, 결정 기록
 │  ├─ ARCHITECTURE.md        구조와 설계 근거
 │  └─ SETUP.md               실행법, .env 키 이름
+├─ .agents/skills/           Codex용 skill (.claude/skills/와 같은 내용)
 └─ .claude/
    ├─ settings.json          권한 + hook 연결
    ├─ skills/                harness(설정 채우기 · 변경), verify, commit-pr
@@ -67,7 +63,7 @@ my-project/
 
 기존 파일은 지우거나 덮어쓰지 않는다. 파일 이름이 아니라 **기능** 단위로 겹침을 먼저 확인하고, 설치 전에 한 번만 묻는다.
 
-1. Claude가 기존 `CLAUDE.md`, `.claude/`, hook, `.husky` 등을 읽고 keelkit의 기능 17개와 대조한다.
+1. Claude가 기존 `CLAUDE.md`, `.claude/`, hook, `.husky` 등을 읽고 keelkit의 기능 16개와 대조한다.
 2. 기능마다 번호를 붙인 표로 보여준다: 겹침 · 내용 다름, 겹침 · 내용 같음, 없음.
 3. 기본값은 **기존 유지**다. 바꿀 번호만 말하면 된다 (예: "1번, 3번 keelkit으로". 없으면 "그대로").
 4. 겹치지 않는 기능만 설치한다. 기존을 지우는 선택은 한 번 더 확인하고 백업을 남긴다.
@@ -79,7 +75,7 @@ my-project/
 | `.claude/settings.json` | 기존 권한과 hook은 유지하고 keelkit 것만 추가한다 |
 | `guard.py`의 검사 중 일부가 겹침 | 그 검사만 끈다. 기존 hook 코드는 건드리지 않는다 |
 
-- `.gitignore`에는 `.env`, `.keel-backup/`과 keelkit이 설치하는 경로를 추가한다: `docs/`, 모드에 따라 `CLAUDE.md`와 `.claude/`, `AGENTS.md`와 `.agents/`. `git init` 전이라 `.gitignore`가 없어도 만든다.
+- `.gitignore`에는 `.env`, `.keel-backup/`과 keelkit이 설치하는 경로를 추가한다: `docs/`, `CLAUDE.md`, `.claude/`, `AGENTS.md`, `.agents/`. `git init` 전이라 `.gitignore`가 없어도 만든다.
 - 이미 git이 추적 중인 경로는 넣지 않고 알린다. 설정 파일을 저장소에 올리고 싶으면 `.gitignore`에서 그 줄을 지운다.
 - 합친 결과를 확인한 뒤 `.keel-backup/`은 직접 지운다.
 
