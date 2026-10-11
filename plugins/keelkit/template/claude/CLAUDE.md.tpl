@@ -1,4 +1,4 @@
-{{shared}}
+@AGENTS.md
 
 ## Claude 전용 설정 (`.claude/`)
 

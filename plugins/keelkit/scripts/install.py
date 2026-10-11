@@ -13,33 +13,15 @@ TEMPLATE      = PLUGIN_ROOT / "template"
 BACKUP_ROOT   = ".keel-backup"
 SETTINGS_REL  = ".claude/settings.json"
 IGNORE_LINES  = (".env", ".keel-backup/")
-INSTALLED_IGNORE = {"claude": ("CLAUDE.md", ".claude/"), "codex": ("AGENTS.md", ".agents/")}
-MODES        = ("claude", "codex", "both")
-SKILLS_NOTE   = {
-    "claude": "skill은 `.claude/skills/`에 있다.",
-    "codex" : "skill은 `.agents/skills/`에 있다.",
-    "both"  : "skill은 `.claude/skills/`(Claude)와 `.agents/skills/`(Codex)에 같은 내용으로 있다. 한쪽을 고치면 다른 쪽도 같이 고친다.",
-}
-CODEX_MAP      = """
-## Codex 설정 (`.agents/`)
-
-| 위치 | 내용 |
-|---|---|
-| `.agents/skills/harness` | 설정 채우기, 규칙 · 절차 변경 |
-| `.agents/skills/verify` | 검증과 체크리스트 |
-| `.agents/skills/commit-pr` | 브랜치, 커밋, PR |
-
-Codex에는 hook이 없다. 삭제 확인, master / main, `.env`, `--no-verify` 규칙은 `docs/rules/workflow.md` 문장으로만 지켜지니 어기지 않는다. `.agents/`는 Codex 샌드박스가 보호 경로로 다뤄서 skill을 고칠 때 권한 승인이 필요할 수 있다."""
+INSTALLED_IGNORE = ("docs/", "CLAUDE.md", ".claude/", "AGENTS.md", ".agents/")
 
 
-def placements(mode: str) -> list[tuple[Path, Path]]:
-    """모드에 맞는 템플릿 파일과 프로젝트 안 경로의 짝을 만든다.
+def placements() -> list[tuple[Path, Path]]:
+    """템플릿 파일과 프로젝트 안 경로의 짝을 만든다.
 
     shared/ 는 프로젝트 루트로 가고(AGENTS.md.tpl 은 AGENTS.md), claude/ 는 .claude/ 로 간다(CLAUDE.md.tpl 은 루트의 CLAUDE.md).
-    claude/skills/ 는 codex 를 쓰면 .agents/skills/ 에도 복사한다. claude 모드는 AGENTS.md 를 만들지 않고 CLAUDE.md 에 그 내용을 담는다.
+    claude/skills/ 는 .agents/skills/ 에도 복사한다. Claude 와 Codex 가 같은 파일을 쓴다.
 
-    Args:
-        mode: claude, codex, both 중 하나
     Returns:
         (템플릿 기준 상대 경로, 프로젝트 기준 상대 경로) 목록
     """
@@ -50,15 +32,10 @@ def placements(mode: str) -> list[tuple[Path, Path]]:
         rel   = source.relative_to(TEMPLATE)
         parts = rel.parts
         if parts[0] == "shared":
-            if parts[-1] == "AGENTS.md.tpl":
-                if mode != "claude":
-                    pairs.append((rel, Path("AGENTS.md")))
-                continue
-            pairs.append((rel, Path(*parts[1:])))
+            pairs.append((rel, Path("AGENTS.md") if parts[-1] == "AGENTS.md.tpl" else Path(*parts[1:])))
         elif parts[0] == "claude":
-            if mode != "codex":
-                pairs.append((rel, Path("CLAUDE.md") if parts[-1] == "CLAUDE.md.tpl" else Path(".claude", *parts[1:])))
-            if parts[1] == "skills" and mode != "claude":
+            pairs.append((rel, Path("CLAUDE.md") if parts[-1] == "CLAUDE.md.tpl" else Path(".claude", *parts[1:])))
+            if parts[1] == "skills":
                 pairs.append((rel, Path(".agents", *parts[1:])))
     return pairs
 
@@ -96,24 +73,17 @@ def github_repo(target: Path) -> str | None:
     return match.group(1) if match else None
 
 
-def project_variables(target: Path, mode: str) -> dict[str, str]:
+def project_variables(target: Path) -> dict[str, str]:
     """스크립트가 확실히 알 수 있는 변수만 채운다. 나머지는 AI 도구가 채운다.
-
-    shared 는 CLAUDE.md 에 들어갈 공통 지침이다. claude 모드는 AGENTS.md.tpl 본문을 그대로 담고, 나머지는 @AGENTS.md 로 가져온다.
 
     Args:
         target: 프로젝트 폴더
-        mode: claude, codex, both 중 하나
     Returns:
         변수 이름과 값
     """
-    shared = (TEMPLATE / "shared" / "AGENTS.md.tpl").read_text(encoding="utf-8") if mode == "claude" else "@AGENTS.md"
     values = {
-        "shared"        : shared,
-        "skills_note"   : SKILLS_NOTE.get(mode, SKILLS_NOTE["both"]),
-        "codex_map"     : CODEX_MAP if mode != "claude" else "",
-        "name"          : target.name,
-        "today"         : datetime.date.today().isoformat(),
+        "name"  : target.name,
+        "today" : datetime.date.today().isoformat(),
     }
     repo = github_repo(target)
     if repo:
@@ -195,19 +165,18 @@ def merge_settings(existing: dict, incoming: dict) -> dict:
     return merged
 
 
-def plan(target: Path, variables: dict[str, str], skip: list[str], mode: str) -> list[dict]:
-    """모드에 맞는 템플릿 파일을 프로젝트와 비교해서 처리 방식을 정한다.
+def plan(target: Path, variables: dict[str, str], skip: list[str]) -> list[dict]:
+    """템플릿 파일을 프로젝트와 비교해서 처리 방식을 정한다.
 
     Args:
         target: 프로젝트 폴더
         variables: 변수 이름과 값
         skip: 건너뛸 경로 목록 (기존 것을 유지할 때)
-        mode: claude, codex, both 중 하나
     Returns:
         파일별 {rel, status, text}. status 는 new, same, merge, conflict, skip 중 하나
     """
     entries = []
-    for rel, dest_rel in placements(mode):
+    for rel, dest_rel in placements():
         dest = target / dest_rel
         if is_skipped(dest_rel.as_posix(), skip):
             entries.append({"rel": dest_rel.as_posix(), "text": "", "status": "skip"})
@@ -281,7 +250,7 @@ def apply(entries: list[dict], target: Path, backup: Path) -> None:
             write_text(dest, entry["text"])
 
 
-def ensure_gitignore(target: Path, dry_run: bool, mode: str) -> tuple[list[str], list[str]]:
+def ensure_gitignore(target: Path, dry_run: bool) -> tuple[list[str], list[str]]:
     """.gitignore 에 .env, 백업 폴더, keelkit 이 설치하는 경로를 넣는다. 없으면 만든다. git init 전에 init 을 돌려도 빠지지 않는다.
 
     설치하는 경로는 이미 git 이 추적 중이면 넣지 않는다. 넣어도 추적은 풀리지 않아서 혼란만 생긴다.
@@ -289,22 +258,17 @@ def ensure_gitignore(target: Path, dry_run: bool, mode: str) -> tuple[list[str],
     Args:
         target: 프로젝트 폴더
         dry_run: True 이면 쓰지 않고 추가할 줄만 계산한다
-        mode: claude, codex, both 중 하나
     Returns:
         (추가한(추가할) 줄, 이미 추적 중이라 넣지 않은 경로)
     """
     path      = target / ".gitignore"
     current   = path.read_text(encoding="utf-8") if path.exists() else ""
     lines     = {line.strip() for line in current.splitlines()}
-    installed = ["docs/"]
-    for tool, paths in INSTALLED_IGNORE.items():
-        if mode in (tool, "both"):
-            installed += paths
     try:
-        tracked = [p for p in installed if subprocess.run(["git", "-C", str(target), "ls-files", "--", p], capture_output=True, text=True, timeout=10).stdout.strip()]
+        tracked = [p for p in INSTALLED_IGNORE if subprocess.run(["git", "-C", str(target), "ls-files", "--", p], capture_output=True, text=True, timeout=10).stdout.strip()]
     except (OSError, subprocess.SubprocessError):
         tracked = []
-    missing = [line for line in (*IGNORE_LINES, *installed) if line not in lines and line not in tracked]
+    missing = [line for line in (*IGNORE_LINES, *INSTALLED_IGNORE) if line not in lines and line not in tracked]
     if missing and not dry_run:
         prefix = "" if not current or current.endswith("\n") else "\n"
         header = "" if "# keelkit" in lines else "# keelkit\n"
@@ -312,7 +276,7 @@ def ensure_gitignore(target: Path, dry_run: bool, mode: str) -> tuple[list[str],
     return missing, tracked
 
 
-def report(entries: list[dict], ignored: list[str], tracked: list[str], target: Path, backup: Path, dry_run: bool, mode: str) -> None:
+def report(entries: list[dict], ignored: list[str], tracked: list[str], target: Path, backup: Path, dry_run: bool) -> None:
     """처리 결과를 출력한다.
 
     Args:
@@ -322,10 +286,9 @@ def report(entries: list[dict], ignored: list[str], tracked: list[str], target: 
         tracked: 이미 git 이 추적 중이라 .gitignore 에 넣지 않은 경로
         backup: 이번 실행의 백업 폴더
         dry_run: 미리보기 여부
-        mode: claude, codex, both 중 하나
     """
     labels = [("new", "새로 만듦"), ("same", "이미 같음"), ("merge", "자동으로 합침"), ("conflict", "직접 합쳐야 함"), ("skip", "건너뜀 (기존 유지)")]
-    print(f"keelkit 설치 {'미리보기' if dry_run else '결과'} (모드: {mode}): {target}")
+    print(f"keelkit 설치 {'미리보기' if dry_run else '결과'} : {target}")
     for status, label in labels:
         names = [e["rel"] for e in entries if e["status"] == status]
         if names:
@@ -350,7 +313,6 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--target", default=".", help="설치할 프로젝트 폴더 (기본: 현재 폴더)")
     parser.add_argument("--dry-run", action="store_true", help="파일을 쓰지 않고 계획만 출력한다")
-    parser.add_argument("--mode", choices=MODES, default="claude", help="claude, codex, both(둘 다 각자). 기본: claude")
     parser.add_argument("--skip", nargs="*", default=[], help="설치하지 않을 경로 (프로젝트 기준, 폴더 가능). 기존 것을 유지할 때 쓴다. 다른 옵션 뒤에 둔다")
     args   = parser.parse_args()
     target = Path(args.target).resolve()
@@ -360,14 +322,14 @@ def main() -> int:
         print(f"설치할 수 없는 폴더입니다: {target}", file=sys.stderr)
         return 1
 
-    variables = project_variables(target, args.mode)
-    entries = plan(target, variables, skip, args.mode)
+    variables = project_variables(target)
+    entries = plan(target, variables, skip)
     stamp   = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     backup  = target / BACKUP_ROOT / stamp
     if not args.dry_run:
         apply(entries, target, backup)
-    ignored, tracked = ensure_gitignore(target, args.dry_run, args.mode)
-    report(entries, ignored, tracked, target, backup, args.dry_run, args.mode)
+    ignored, tracked = ensure_gitignore(target, args.dry_run)
+    report(entries, ignored, tracked, target, backup, args.dry_run)
     return 0
 
 

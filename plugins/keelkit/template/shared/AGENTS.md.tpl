@@ -28,8 +28,17 @@
 | skill `verify` | 검증과 체크리스트 절차 | 구현을 마쳤을 때 |
 | skill `commit-pr` | `dev` 기준 브랜치, 커밋, PR(`gh`), squash 병합, 브랜치 삭제 | 커밋할 때 |
 
-{{skills_note}}
-{{codex_map}}
+skill은 `.claude/skills/`(Claude)와 `.agents/skills/`(Codex)에 같은 내용으로 있다. 한쪽을 고치면 다른 쪽도 같이 고친다.
+
+## Codex 설정 (`.agents/`)
+
+| 위치 | 내용 |
+|---|---|
+| `.agents/skills/harness` | 설정 채우기, 규칙 · 절차 변경 |
+| `.agents/skills/verify` | 검증과 체크리스트 |
+| `.agents/skills/commit-pr` | 브랜치, 커밋, PR |
+
+Codex에는 hook이 없다. 삭제 확인, master / main, `.env`, `--no-verify` 규칙은 `docs/rules/workflow.md` 문장으로만 지켜지니 어기지 않는다. `.agents/`는 Codex 샌드박스가 보호 경로로 다뤄서 skill을 고칠 때 권한 승인이 필요할 수 있다.
 
 ## 문서
 
