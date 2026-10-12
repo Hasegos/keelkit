@@ -5,7 +5,7 @@ description: 기능 구현을 마친 뒤 dev 기준으로 브랜치를 만들고
 
 # 커밋 · PR 절차
 
-저장소는 `git remote get-url origin`으로 확인한다. 기준 브랜치는 항상 `dev`. 기능 구현과 검증(`verify`)이 끝나면 묻지 않고 커밋 · push · PR · dev 병합까지 한다 (`docs/rules/workflow.md` 1번). 작성자는 git 설정 그대로, AI 도구 표시 줄(`Co-Authored-By` 등)은 넣지 않는다. `.env` 계열 파일은 커밋하지 않는다 (hook이 막는다).
+저장소는 `git remote get-url origin`으로 확인한다. 기준 브랜치는 항상 `dev`. 계획이 승인된 작업은 기능 구현과 검증(`verify`)이 끝나면 묻지 않고 커밋 · push · PR · dev 병합까지 한다 (`docs/rules/workflow.md` 1번). 작성자는 git 설정 그대로, AI 도구 표시 줄(`Co-Authored-By` 등)은 넣지 않는다. `.env` 계열 파일은 커밋하지 않는다 (hook이 막는다).
 
 ## 0. gh 준비
 
@@ -44,7 +44,7 @@ PR 작성과 병합은 `gh` CLI로 한다. 시작 전에 `gh auth status`로 확
 
 ## 3. PR
 
-변경이 아주 클 때만 PR 작성 전에 `reviewer` agent(Claude에만 있다. 없으면 직접 `dev` 대비 diff를 읽어서)로 `dev` 대비 변경을 검토하고, 높음 · 중간 지적 사항은 고친 뒤 진행한다. 기준은 `git diff --shortstat dev...HEAD`에서 변경 파일 20개 이상 또는 변경 줄(추가 + 삭제) 500줄 이상이다. 그보다 작은 변경은 부르지 않는다.
+PR 작성 전에 `dev` 대비 diff를 읽고 검수한다 (`docs/rules/workflow.md` 1번 변경 절차 4번). 변경이 아주 크면 `reviewer` agent(Claude에만 있다. 없으면 직접 읽어서)로 한다. 기준은 `git diff --shortstat dev...HEAD`에서 변경 파일 20개 이상 또는 변경 줄(추가 + 삭제) 500줄 이상이다. 작은 변경은 agent를 부르지 않고 직접 읽는다. 높음 · 중간 지적 사항은 고친 뒤 진행한다.
 
 브랜치를 push한 뒤 만든다. 본문은 실제 diff와 맞는지 확인한다.
 
