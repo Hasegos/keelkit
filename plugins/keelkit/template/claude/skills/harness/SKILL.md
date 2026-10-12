@@ -16,7 +16,7 @@ description: 프로젝트의 AI 도구 설정(AGENTS.md, CLAUDE.md, docs, rules,
    |---|---|
    | 무엇을 만드나, 누가 쓰나 | `AGENTS.md` 소개, `docs/ROADMAP.md` 1번 |
    | 핵심 흐름 (입력 → 처리 → 결과) | `docs/ROADMAP.md` 2번 (Mermaid) |
-   | 진행 방식은 `docs/rules/workflow.md` 1번의 기본값(묻지 않고 진행, 삭제는 확인, master / main 제외)을 알려주고, 바꿀 것만 묻는다 | `docs/rules/workflow.md` 1번 |
+   | 진행 방식은 `docs/rules/workflow.md` 1번의 기본값(변경 전 계획과 승인, 변경 뒤 검수와 한 줄 보고, 삭제는 확인, master / main 제외)을 알려주고, 바꿀 것만 묻는다 | `docs/rules/workflow.md` 1번 |
 
 3. 해당하는 주제만 추가로 묻는다. 프로젝트에 없는 주제는 묻지 않는다.
 
