@@ -18,6 +18,7 @@
 - 문제는 증상이 아니라 근본 원인을 본다. 같은 문제가 다른 곳에서도 생기는지 확인한다.
 - 규칙, 절차, 금지 사항을 추가하거나 바꾸는 요청은 `harness` skill을 따른다.
 - `--no-verify` 같은 hook 우회 옵션을 쓰지 않는다.
+- `.gitignore`의 `# keelkit` 아래 줄(`docs/`, `CLAUDE.md`, `.claude/`, `AGENTS.md`, `.agents/` 등)은 지우지 않는다. 다른 `.gitignore`와 합칠 때도 파일을 새로 쓰지 말고 줄만 더한다. 지우는 것은 사용자가 요청할 때만 한다.
 
 ## 3. 압축 (compact)
 
