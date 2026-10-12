@@ -32,7 +32,7 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/install.py" --dry-run
 
 | # | 기능 | keelkit 쪽 | 기존에서 찾을 곳 | 건너뛰는 방법 |
 |---|---|---|---|---|
-| 1 | 진행 방식 (묻지 않고 진행, 권한) | `docs/rules/workflow.md` 1절 첫 행, `settings.json`의 `allow` | `CLAUDE.md`, rules, `settings.json`의 `permissions` | 설치 뒤 `workflow.md` 행을 빼고, `settings.json`에 더해진 `allow` 항목을 백업 원본대로 되돌린다 |
+| 1 | 진행 방식 (계획 후 진행, 권한) | `docs/rules/workflow.md` 1절 첫 행, `settings.json`의 `allow` | `CLAUDE.md`, rules, `settings.json`의 `permissions` | 설치 뒤 `workflow.md` 행을 빼고, `settings.json`에 더해진 `allow` 항목을 백업 원본대로 되돌린다 |
 | 2 | 삭제 확인 | `guard.py` 검사 `delete`, `workflow.md` 삭제 행 | hook, `settings.json`, `CLAUDE.md` | `guard.py`의 `DISABLED`에 `delete`, `workflow.md` 행 제거 |
 | 3 | master / main 보호 | `guard.py` 검사 `protected`, `workflow.md` 행 | hook, `.husky/pre-push`, `.git/hooks`, `CLAUDE.md` | `DISABLED`에 `protected`, `workflow.md` 행 제거 |
 | 4 | `.env` 보호 | `guard.py` 검사 `env`, `workflow.md` 환경변수 행 | hook, `.gitignore`, `CLAUDE.md` | `DISABLED`에 `env`, `workflow.md` 행 제거 |

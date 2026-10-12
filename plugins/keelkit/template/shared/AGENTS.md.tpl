@@ -20,7 +20,7 @@
 
 | 위치 | 내용 | 읽는 때 |
 |---|---|---|
-| `docs/rules/workflow.md` | 진행 방식(묻지 않고 진행, 삭제는 확인, master / main 제외), 압축(compact) 규칙 | 항상 |
+| `docs/rules/workflow.md` | 진행 방식(변경 전 계획과 승인, 변경 뒤 검수와 한 줄 보고, 삭제는 확인, master / main 제외), 압축(compact) 규칙 | 항상 |
 | `docs/rules/code.md` | 구조, 같이 고칠 문서 | 코드 파일을 만질 때 |
 | `docs/rules/style.md` | 주석(언어별 표준 문서 주석, 번호 박스 헤더는 선택) | 코드 파일을 만질 때 |
 | `docs/rules/docs.md` | 원본 문서 표, 문서 쓰는 방식 | 문서를 만질 때 |
