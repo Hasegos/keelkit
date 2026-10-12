@@ -97,6 +97,7 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/install.py" --skip <경로> <경로>
 - `workflow.md`처럼 한 파일에 여러 기능이 들어 있으면, 기존 유지로 정한 기능의 행이나 절만 방금 만든 그 파일에서 뺀다.
 - 사용자가 keelkit으로 바꾸기로 한 기능은 `.keel-backup/<시각>/original/`에 기존 것을 복사해 두었는지 확인한 뒤, 기존 쪽의 해당 규칙을 지우고 keelkit 것을 둔다.
 - 스크립트가 `.gitignore`에 `.env`, `.keel-backup/`, `docs/`와 설정 경로(`CLAUDE.md`, `.claude/`, `AGENTS.md`, `.agents/`)를 넣는다. 이미 git이 추적 중인 경로는 넣지 않고 출력에 알린다. 그 경로가 있으면 사용자에게 알린다.
+- 설치 뒤에 `.gitignore`를 고치거나 다른 템플릿(스타터 등)의 `.gitignore`와 합칠 때도 `# keelkit` 아래 줄은 지우지 않고 그대로 둔다. 파일을 통째로 새로 쓰지 말고 필요한 줄만 더한다. 그 줄을 지우면 설치 경로가 커밋된다. 지우는 것은 사용자가 요청할 때만 한다.
 - `guard.py`와 hook 기능(표의 2, 3, 4, 5, 14, 16번)은 Claude에서만 동작한다. Codex에서는 규칙 문장(`docs/rules/workflow.md`)으로만 지켜진다고 사용자에게 알린다.
 - 스크립트는 `.claude/settings.json`을 JSON으로 더한다. 1번을 기존 유지로 정했다면, 더해진 `allow` 항목을 백업 원본(`original/.claude/settings.json`)과 비교해서 되돌린다.
 - `CLAUDE.md`의 `규칙과 절차` 표와 `Claude 전용 설정` 표에서 건너뛴 기능의 행은 뺀다. 없는 파일을 가리키지 않게 한다.
