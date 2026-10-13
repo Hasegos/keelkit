@@ -30,15 +30,16 @@
 
 skill은 `.claude/skills/`(Claude)와 `.agents/skills/`(Codex)에 같은 내용으로 있다. 한쪽을 고치면 다른 쪽도 같이 고친다.
 
-## Codex 설정 (`.agents/`)
+## Codex 설정 (`.agents/`, `.codex/`)
 
 | 위치 | 내용 |
 |---|---|
 | `.agents/skills/harness` | 설정 채우기, 규칙 · 절차 변경 |
 | `.agents/skills/verify` | 검증과 체크리스트 |
 | `.agents/skills/commit-pr` | 브랜치, 커밋, PR |
+| `.codex/hooks.json`, `.codex/hooks/guard.py` | 도구 실행 전 검사. `.claude/hooks/guard.py`의 규칙을 그대로 쓴다 |
 
-현재 keelkit은 Codex용 hook을 설치하지 않는다. 삭제 확인, master / main / dev 삭제 금지, master / main, `.env`, `--no-verify` 규칙은 `docs/rules/workflow.md` 문장으로만 지켜지니 어기지 않는다. `.agents/`는 Codex 샌드박스가 보호 경로로 다뤄서 skill을 고칠 때 권한 승인이 필요할 수 있다.
+`.codex/` hook은 master / main merge · push, `.env` 커밋과 `.env.*` 파일 생성, `--no-verify`, Co-Authored-By, master / main / dev 삭제를 막는다. 사용자가 Codex에서 프로젝트와 hook을 신뢰(`/hooks`)하기 전에는 꺼져 있고, 꺼져 있어도 경고가 없다. 삭제 확인은 Codex hook이 지원하지 않아 `docs/rules/workflow.md` 문장으로만 지켜지니 어기지 않는다. `.agents/`는 Codex 샌드박스가 보호 경로로 다뤄서 skill을 고칠 때 권한 승인이 필요할 수 있다.
 
 ## 문서
 
