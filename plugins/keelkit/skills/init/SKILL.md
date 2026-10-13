@@ -93,6 +93,7 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/install.py" --skip <경로> <경로>
 ```
 
 - 기존 유지로 정한 기능의 파일은 `--skip`에 넣는다. 건너뛴 파일은 만들지 않고 백업도 하지 않는다.
+- 사용자가 "harness는 생략해", "harness 단계는 건너뛰어"라고 하면 7번 채우기 단계만 생략한다는 뜻이다. `harness` skill 파일(`.claude/skills/harness`, `.agents/skills/harness`)은 `--skip`에 넣지 않고 항상 설치한다. 기존 harness skill을 유지하겠다고 분명히 말했을 때만 `--skip`에 넣는다.
 - `guard.py`는 파일을 합치지 않는다. 방금 만든 파일의 맨 위 `DISABLED = set()`에 끌 검사 ID를 넣는다 (예: `DISABLED = {"env", "delete"}`). 기존 hook 코드는 건드리지 않는다. 고친 뒤 `python -m py_compile .claude/hooks/guard.py`로 확인한다.
 - `workflow.md`처럼 한 파일에 여러 기능이 들어 있으면, 기존 유지로 정한 기능의 행이나 절만 방금 만든 그 파일에서 뺀다.
 - 사용자가 keelkit으로 바꾸기로 한 기능은 `.keel-backup/<시각>/original/`에 기존 것을 복사해 두었는지 확인한 뒤, 기존 쪽의 해당 규칙을 지우고 keelkit 것을 둔다.
@@ -119,7 +120,7 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/install.py" --skip <경로> <경로>
 
 ## 7. 채우기
 
-프로젝트의 `.claude/skills/harness/SKILL.md`(Codex에서는 `.agents/skills/harness/SKILL.md`)를 읽고 1번 절차를 그대로 따른다. 기존 `README`, `AGENTS.md`, 문서, 의존성 파일에서 읽을 수 있는 것은 먼저 읽어서 `{{변수}}`와 `미정`을 채우고, 못 읽는 것만 사용자에게 한 번에 묻는다. `harness`를 건너뛰었으면 이 절은 생략하고 `{{`와 `미정`을 직접 채운다.
+프로젝트의 `.claude/skills/harness/SKILL.md`(Codex에서는 `.agents/skills/harness/SKILL.md`)를 읽고 1번 절차를 그대로 따른다. 기존 `README`, `AGENTS.md`, 문서, 의존성 파일에서 읽을 수 있는 것은 먼저 읽어서 `{{변수}}`와 `미정`을 채우고, 못 읽는 것만 사용자에게 한 번에 묻는다. 사용자가 채우기를 생략하라고 했으면 이 절은 생략하고 `{{`와 `미정`은 그대로 둔다고 알린다. 기존 harness skill을 유지해서 `harness`가 설치되지 않았으면 `{{`와 `미정`을 직접 채운다.
 
 ## 8. 마무리
 
