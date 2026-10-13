@@ -12,15 +12,17 @@ PLUGIN_ROOT   = Path(__file__).resolve().parent.parent
 TEMPLATE      = PLUGIN_ROOT / "template"
 BACKUP_ROOT   = ".keel-backup"
 SETTINGS_REL  = ".claude/settings.json"
+HOOKS_REL     = ".codex/hooks.json"
+JSON_MERGE    = (SETTINGS_REL, HOOKS_REL)
 IGNORE_LINES  = (".env", ".keel-backup/")
-INSTALLED_IGNORE = ("docs/", "CLAUDE.md", ".claude/", "AGENTS.md", ".agents/")
+INSTALLED_IGNORE = ("docs/", "CLAUDE.md", ".claude/", "AGENTS.md", ".agents/", ".codex/")
 
 
 def placements() -> list[tuple[Path, Path]]:
     """템플릿 파일과 프로젝트 안 경로의 짝을 만든다.
 
     shared/ 는 프로젝트 루트로 가고(AGENTS.md.tpl 은 AGENTS.md), claude/ 는 .claude/ 로 간다(CLAUDE.md.tpl 은 루트의 CLAUDE.md).
-    claude/skills/ 는 .agents/skills/ 에도 복사한다. Claude 와 Codex 가 같은 파일을 쓴다.
+    claude/skills/ 는 .agents/skills/ 에도 복사한다. Claude 와 Codex 가 같은 파일을 쓴다. codex/ 는 .codex/ 로 간다(Codex hook).
 
     Returns:
         (템플릿 기준 상대 경로, 프로젝트 기준 상대 경로) 목록
@@ -37,6 +39,8 @@ def placements() -> list[tuple[Path, Path]]:
             pairs.append((rel, Path("CLAUDE.md") if parts[-1] == "CLAUDE.md.tpl" else Path(".claude", *parts[1:])))
             if parts[1] == "skills":
                 pairs.append((rel, Path(".agents", *parts[1:])))
+        elif parts[0] == "codex":
+            pairs.append((rel, Path(".codex", *parts[1:])))
     return pairs
 
 
@@ -133,7 +137,7 @@ def render(rel: Path, dest_rel: Path, variables: dict[str, str], skip: list[str]
         변수를 채운 본문
     """
     text = fill((TEMPLATE / rel).read_text(encoding="utf-8"), variables)
-    if dest_rel.as_posix() == SETTINGS_REL:
+    if dest_rel.as_posix() in JSON_MERGE:
         if not shutil.which("python") and shutil.which("python3"):
             text = text.replace('"command": "python ', '"command": "python3 ')
         if skip:
@@ -192,7 +196,7 @@ def plan(target: Path, variables: dict[str, str], skip: list[str]) -> list[dict]
                 continue
             if current.replace("\r\n", "\n") == text.replace("\r\n", "\n"):
                 entry["status"] = "same"
-            elif entry["rel"] == SETTINGS_REL:
+            elif entry["rel"] in JSON_MERGE:
                 entry.update(settings_status(current, text))
             else:
                 entry["status"] = "conflict"
