@@ -126,6 +126,6 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/install.py" --skip <경로> <경로>
 - 남은 `{{`와 `미정` 위치를 목록으로 알린다.
 - 백업 폴더 `.keel-backup/`은 합친 결과를 확인한 뒤 사용자가 지운다 (삭제는 확인을 받는다).
 - hook과 권한은 새 Claude 세션부터 적용된다고 알린다. `init`을 돌리기 전에 폴더를 바꿨다면 새 세션을 열어야 hook 경로가 맞는다.
-- Codex에는 강제 장치(hook)가 없고 규칙으로만 지켜진다고 알린다.
+- 현재 keelkit은 Codex용 hook을 설치하지 않아서 Codex에서는 규칙으로만 지켜진다고 알린다.
 - `.claude/skills/`와 `.agents/skills/`는 같은 내용의 복사본이다. 한쪽을 고치면 다른 쪽도 같이 고친다고 알린다.
 - keelkit이 설치한 경로는 `.gitignore`에 들어간다. 저장소에 올리려면 사용자가 그 줄을 지운다.

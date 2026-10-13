@@ -38,7 +38,7 @@ skill은 `.claude/skills/`(Claude)와 `.agents/skills/`(Codex)에 같은 내용�
 | `.agents/skills/verify` | 검증과 체크리스트 |
 | `.agents/skills/commit-pr` | 브랜치, 커밋, PR |
 
-Codex에는 hook이 없다. 삭제 확인, master / main, `.env`, `--no-verify` 규칙은 `docs/rules/workflow.md` 문장으로만 지켜지니 어기지 않는다. `.agents/`는 Codex 샌드박스가 보호 경로로 다뤄서 skill을 고칠 때 권한 승인이 필요할 수 있다.
+현재 keelkit은 Codex용 hook을 설치하지 않는다. 삭제 확인, master / main / dev 삭제 금지, master / main, `.env`, `--no-verify` 규칙은 `docs/rules/workflow.md` 문장으로만 지켜지니 어기지 않는다. `.agents/`는 Codex 샌드박스가 보호 경로로 다뤄서 skill을 고칠 때 권한 승인이 필요할 수 있다.
 
 ## 문서
 
@@ -50,7 +50,7 @@ Codex에는 hook이 없다. 삭제 확인, master / main, `.env`, `--no-verify` 
 
 ## 진행 상황
 
-세부 원본은 `docs/ROADMAP.md` 2번.
+세부 원본은 `docs/ROADMAP.md` 3번.
 
 - [ ] {{first_step|미정}}
 
