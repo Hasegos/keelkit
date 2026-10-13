@@ -27,7 +27,7 @@ hook과 권한은 새 세션부터 적용된다.
 codex plugin marketplace add Hasegos/keelkit
 ```
 
-Codex에서 keelkit 플러그인을 설치하고 프로젝트 폴더를 연 뒤 "이 폴더에 keelkit init 해줘"라고 말한다. `$init`으로 직접 부를 수도 있다. Codex에는 hook이 없으므로 금지 규칙은 문장으로만 지켜진다.
+Codex에서 keelkit 플러그인을 설치하고 프로젝트 폴더를 연 뒤 "이 폴더에 keelkit init 해줘"라고 말한다. `$init`으로 직접 부를 수도 있다. 현재 keelkit은 Codex용 hook을 설치하지 않으므로 금지 규칙은 문장으로만 지켜진다.
 
 ## Claude와 Codex 둘 다
 
@@ -91,6 +91,7 @@ my-project/
 | `--no-verify`, `git commit -n`, `core.hooksPath` 변경, `HUSKY=0` | 차단 |
 | 파일, 폴더, 브랜치, 태그, 컨테이너 삭제, 강제 push | 사용자에게 확인 요청 |
 | `feature/` 브랜치 삭제 | 자동 허용 |
+| `master` / `main` / `dev` 브랜치 삭제 | 차단 |
 
 ## 기본 진행 규칙
 
