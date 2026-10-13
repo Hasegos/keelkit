@@ -27,7 +27,7 @@ hook과 권한은 새 세션부터 적용된다.
 codex plugin marketplace add Hasegos/keelkit
 ```
 
-Codex에서 keelkit 플러그인을 설치하고 프로젝트 폴더를 연 뒤 "이 폴더에 keelkit init 해줘"라고 말한다. `$init`으로 직접 부를 수도 있다. 현재 keelkit은 Codex용 hook을 설치하지 않으므로 금지 규칙은 문장으로만 지켜진다.
+Codex에서 keelkit 플러그인을 설치하고 프로젝트 폴더를 연 뒤 "이 폴더에 keelkit init 해줘"라고 말한다. `$init`으로 직접 부를 수도 있다. `.codex/hooks`가 master 보호, `.env`, `--no-verify` 등을 막지만, Codex에서 프로젝트와 hook을 신뢰(`/hooks`)해야 켜진다. 신뢰 전에는 경고 없이 꺼져 있다. 삭제 확인은 문장으로만 지켜진다.
 
 ## Claude와 Codex 둘 다
 
@@ -50,6 +50,7 @@ my-project/
 │  ├─ ARCHITECTURE.md        구조와 설계 근거
 │  └─ SETUP.md               실행법, .env 키 이름
 ├─ .agents/skills/           Codex용 skill (.claude/skills/와 같은 내용)
+├─ .codex/                   Codex hook: hooks.json + guard.py (.claude/hooks/guard.py의 규칙을 사용)
 └─ .claude/
    ├─ settings.json          권한 + hook 연결
    ├─ skills/                harness(설정 채우기 · 변경), verify, commit-pr
@@ -75,7 +76,7 @@ my-project/
 | `.claude/settings.json` | 기존 권한과 hook은 유지하고 keelkit 것만 추가한다 |
 | `guard.py`의 검사 중 일부가 겹침 | 그 검사만 끈다. 기존 hook 코드는 건드리지 않는다 |
 
-- `.gitignore`에는 `.env`, `.keel-backup/`과 keelkit이 설치하는 경로를 추가한다: `docs/`, `CLAUDE.md`, `.claude/`, `AGENTS.md`, `.agents/`. `git init` 전이라 `.gitignore`가 없어도 만든다.
+- `.gitignore`에는 `.env`, `.keel-backup/`과 keelkit이 설치하는 경로를 추가한다: `docs/`, `CLAUDE.md`, `.claude/`, `AGENTS.md`, `.agents/`, `.codex/`. `git init` 전이라 `.gitignore`가 없어도 만든다.
 - 이미 git이 추적 중인 경로는 넣지 않고 알린다. 설정 파일을 저장소에 올리고 싶으면 `.gitignore`에서 그 줄을 지운다.
 - 합친 결과를 확인한 뒤 `.keel-backup/`은 직접 지운다.
 
