@@ -15,6 +15,15 @@ NO_VERIFY      = (
 )
 PROTECTED      = ("master", "main")
 PROT           = r"(?:(?<![\w./-])|refs/heads/)(?:" + "|".join(PROTECTED) + r")(?![\w./-])"
+KEEP           = r"(?:(?<![\w./-])|refs/heads/)(?:" + "|".join((*PROTECTED, "dev")) + r")(?![\w./-])"
+KEEP_DELETE    = (
+    re.compile(r"\bgit\s+branch\b[^;&|]*\s(?:-[a-zA-Z]*[dD][a-zA-Z]*|--delete)\b[^;&|]*" + KEEP),
+    re.compile(r"\bgit\s+push\b[^;&|]*\s(?:--delete|-d)\s+[^;&|]*" + KEEP),
+    re.compile(r"\bgit\s+push\b[^;&|]*\s:" + KEEP),
+)
+GIT_OPTS       = re.compile(r"(?<=\bgit)(?:\s+(?:-[Cc]\s+(?:\"[^\"]*\"|'[^']*'|\S+)|--(?:git-dir|work-tree|namespace)(?:=|\s+)\S+|--(?:no-pager|paginate|bare|no-replace-objects|literal-pathspecs|no-optional-locks)))+(?=\s)")
+GIT_C          = re.compile(r"\bgit\s+(?:-c\s+(?:\"[^\"]*\"|'[^']*'|\S+)\s+)*-C\s+(?:\"([^\"]*)\"|'([^']*)'|(\S+))")
+MSG_FILE       = re.compile(r"(?:-F|--file)(?:=|\s+)(?!-(?:\s|$))(?:\"([^\"]*)\"|'([^']*)'|(\S+))")
 ENV_FILE       = re.compile(r"(?:^|/)\.env(?:\.[^/]+)?$")
 ENV_EXTRA      = re.compile(r"(?:^|[/\\])(?:\.env\.[^/\\]+|env\.(?:example|sample|template))$", re.I)
 FEATURE_DELETE = (
@@ -55,6 +64,22 @@ def git_out(args: list[str], cwd: str | None) -> str:
         return ""
 
 
+def effective_cwd(command: str, cwd: str | None) -> str | None:
+    """git -C <경로> 가 있으면 그 경로를, 없으면 cwd 를 반환한다. 상대 경로는 cwd 기준이다.
+
+    Args:
+        command: 실행하려는 명령
+        cwd: 실행 위치
+    Returns:
+        검사할 저장소 위치
+    """
+    match = GIT_C.search(command)
+    if not match:
+        return cwd
+    path = Path(match.group(1) or match.group(2) or match.group(3))
+    return str(path if path.is_absolute() else Path(cwd or ".") / path)
+
+
 def remote_is_empty(command: str, cwd: str | None) -> bool:
     """git push 대상 원격에 브랜치가 하나도 없으면 True 를 반환한다. 빈 저장소의 첫 push(master 만들기)만 통과시키려는 예외다.
 
@@ -76,18 +101,20 @@ def remote_is_empty(command: str, cwd: str | None) -> bool:
     return done.returncode == 0 and not done.stdout.strip()
 
 
-def commit_message_texts(command: str) -> list[str]:
+def commit_message_texts(command: str, cwd: str | None) -> list[str]:
     """git commit 명령 문자열과 -F / --file 로 넘긴 메시지 파일 내용을 모은다.
 
     Args:
         command: 실행하려는 명령
+        cwd: 실행 위치. 상대 경로 메시지 파일을 읽는 기준이다
     Returns:
         검사할 텍스트 목록
     """
     texts = [command]
-    for path in re.findall(r"(?:-F|--file)[= ]\s*(?!-(?:\s|$))(\S+)", command):
+    for match in MSG_FILE.finditer(command):
+        path = Path(match.group(1) or match.group(2) or match.group(3))
         try:
-            texts.append(Path(path.strip("'\"")).read_text("utf-8"))
+            texts.append((path if path.is_absolute() else Path(cwd or ".") / path).read_text("utf-8"))
         except OSError:
             pass
     return texts
@@ -140,15 +167,25 @@ def check_block(command: str, cwd: str | None) -> str | None:
     Returns:
         차단 이유. 해당하지 않으면 None
     """
-    if "coauthor" not in DISABLED and re.search(r"\bgit\b.*\bcommit\b", command) and any(re.search(r"co-authored-by", t, re.I) for t in commit_message_texts(command)):
+    reason = check_noverify(command)
+    if reason:
+        return reason
+
+    cwd     = effective_cwd(command, cwd)
+    command = GIT_OPTS.sub("", command)
+
+    if "coauthor" not in DISABLED and re.search(r"\bgit\b.*\bcommit\b", command) and any(re.search(r"co-authored-by", t, re.I) for t in commit_message_texts(command, cwd)):
         return "커밋 메시지에 Co-Authored-By 를 넣지 않는다 (사용자 규칙). 그 줄을 빼고 다시 커밋하세요."
 
-    reason = check_noverify(command) or check_env(command, cwd)
+    reason = check_env(command, cwd)
     if reason:
         return reason
 
     if "protected" in DISABLED:
         return None
+
+    if any(p.search(command) for p in KEEP_DELETE):
+        return "master / main / dev 브랜치는 삭제하지 않는다 (사용자 규칙). feature/ 브랜치만 병합 뒤에 삭제한다."
 
     if re.search(r"\bgit\b[^;&|]*\b(?:merge|push)\b", command) and not remote_is_empty(command, cwd):
         pushes_protected = re.search(r"\bgit\b[^;&|]*\bpush\b[^;&|]*" + PROT, command)
@@ -222,7 +259,7 @@ def main() -> None:
         print(reason, file=sys.stderr)
         sys.exit(2)
 
-    label = check_delete(command)
+    label = check_delete(GIT_OPTS.sub("", command))
     if label:
         print(json.dumps({"hookSpecificOutput": {
             "hookEventName"           : "PreToolUse",
