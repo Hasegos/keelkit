@@ -28,7 +28,7 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/install.py" --dry-run
 
 ## 3. 겹치는 기능 찾기 (기능 단위)
 
-파일 이름이 달라도 같은 일을 하는 규칙, skill, hook이 있으면 겹친 것이다. 아래 표의 기능마다 "기존에서 찾을 곳"을 직접 읽고 판정한다. 읽는 순서는 `CLAUDE.md` → `.claude/rules` → `.claude/skills`, `.claude/agents` → `.claude/hooks`, `.claude/settings.json` → `docs/`, `README`, `CONTRIBUTING.md` → `.husky`, `.git/hooks`, `.pre-commit-config.yaml`, `.github/` 순이다. `.husky` 이하는 근거로만 읽고 고치지 않는다.
+파일 이름이 달라도 같은 일을 하는 규칙, skill, hook이 있으면 겹친 것이다. 아래 표의 기능마다 "기존에서 찾을 곳"을 직접 읽고 판정한다. 읽는 순서는 `CLAUDE.md`, `AGENTS.md` → `.claude/rules` → `.claude/skills`, `.agents/skills`, `.claude/agents` → `.claude/hooks`, `.claude/settings.json`, `.codex/` → `docs/`, `README`, `CONTRIBUTING.md` → `.husky`, `.git/hooks`, `.pre-commit-config.yaml`, `.github/` 순이다. 아래 표의 `CLAUDE.md`는 `AGENTS.md`도, skill은 `.agents/skills/`도, hook과 설정은 `.codex/`도 포함한다. `.husky` 이하는 근거로만 읽고 고치지 않는다.
 
 | # | 기능 | keelkit 쪽 | 기존에서 찾을 곳 | 건너뛰는 방법 |
 |---|---|---|---|---|
@@ -100,7 +100,7 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/install.py" --skip <경로> <경로>
 - 설치 뒤에 `.gitignore`를 고치거나 다른 템플릿(스타터 등)의 `.gitignore`와 합칠 때도 `# keelkit` 아래 줄은 지우지 않고 그대로 둔다. 파일을 통째로 새로 쓰지 말고 필요한 줄만 더한다. 그 줄을 지우면 설치 경로가 커밋된다. 지우는 것은 사용자가 요청할 때만 한다.
 - `guard.py`와 hook 기능(표의 2, 3, 4, 5, 14, 16번)은 Claude에서만 동작한다. Codex에서는 규칙 문장(`docs/rules/workflow.md`)으로만 지켜진다고 사용자에게 알린다.
 - 스크립트는 `.claude/settings.json`을 JSON으로 더한다. 1번을 기존 유지로 정했다면, 더해진 `allow` 항목을 백업 원본(`original/.claude/settings.json`)과 비교해서 되돌린다.
-- `CLAUDE.md`의 `규칙과 절차` 표와 `Claude 전용 설정` 표에서 건너뛴 기능의 행은 뺀다. 없는 파일을 가리키지 않게 한다.
+- `AGENTS.md`의 `규칙과 절차` 표와 `Codex 설정` 표, `CLAUDE.md`의 `Claude 전용 설정` 표에서 건너뛴 기능의 행은 뺀다. 없는 파일을 가리키지 않게 한다. 기존 기능을 유지했다면 행을 빼지 말고 기존의 실제 위치(파일과 절)를 가리키게 고친다.
 
 ## 6. 남은 충돌 합치기
 
