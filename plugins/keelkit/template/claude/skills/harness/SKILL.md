@@ -49,7 +49,7 @@ description: 프로젝트의 AI 도구 설정(AGENTS.md, CLAUDE.md, docs, rules,
 | 매번 알아야 하는 사실 (소개, 자주 쓰는 명령) | `AGENTS.md` |
 | 특정 주제 / 경로에서만 지킬 규칙 | `docs/rules/<주제>.md` + `AGENTS.md` 표에 읽는 때 추가 |
 | 여러 단계로 된 절차 (배포, 릴리스) | `.claude/skills/<이름>/SKILL.md`와 `.agents/skills/<이름>/SKILL.md` (같은 내용으로 둔다) |
-| 절대 어기면 안 되는 것 | `.claude/hooks/` + `settings.json` 연결 (부탁이 아니라 동작 차단. Claude 전용이고 Codex는 아직 지원하지 않는다) |
+| 절대 어기면 안 되는 것 | `.claude/hooks/` + `settings.json` 연결 (부탁이 아니라 동작 차단. Codex에서도 막으려면 `.codex/hooks.json`에도 연결한다. Codex hook은 삭제 확인(ask)을 지원하지 않는다) |
 | 출력이 긴 작업 (테스트, 빌드) | `.claude/agents/<이름>.md` |
 | 권한 (허용 / 금지 명령) | `.claude/settings.json` |
 
