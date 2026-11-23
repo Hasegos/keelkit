@@ -1,6 +1,6 @@
 # keelkit
 
-> 어떤 프로젝트든 같은 뼈대로 시작한다. 폴더를 열고 `/keelkit:init` 한 줄이면 `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.agents/`, `docs/`가 깔리고 AI 도구가 프로젝트를 읽어서 채운다.
+> 어떤 프로젝트든 같은 뼈대로 시작한다. 폴더를 열고 `/keelkit:init` 한 줄이면 `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.agents/`, `.codex/`, `docs/`가 깔리고 AI 도구가 프로젝트를 읽어서 채운다.
 
 Claude Code와 Codex에서 같이 쓰는 플러그인. 어느 쪽에서 `init`을 돌려도 결과가 같고, 특정 언어나 프레임워크에 묶이지 않는다.
 
@@ -35,7 +35,7 @@ Codex에서 keelkit 플러그인을 설치하고 프로젝트 폴더를 연 뒤 
 
 - 규칙 원본은 `docs/rules/`, 공통 지침 원본은 `AGENTS.md` 한 곳이다. `CLAUDE.md`는 `@AGENTS.md`로 그것을 가져온다. 도구를 바꿔도 내용이 같다.
 - skill은 `.claude/skills/`와 `.agents/skills/`에 같은 내용으로 복사된다. 한쪽을 고치면 다른 쪽도 같이 고친다.
-- hook(`guard.py`)은 Claude 전용이다. Codex는 같은 규칙을 문장으로만 지킨다.
+- hook은 Claude(`.claude/hooks`)와 Codex(`.codex/hooks`)에 각각 있고, Codex hook은 `.claude/hooks/guard.py`의 규칙을 그대로 쓴다. Codex hook은 프로젝트와 hook을 신뢰(`/hooks`)해야 켜진다. 삭제 확인과 끝 빈 줄 제거는 Claude에서만 동작하고, Codex는 문장으로만 지킨다.
 - Claude에서 Codex 플러그인(`/codex:rescue`)으로 작업을 그때그때 맡길 수 있다. keelkit은 이 위임을 설치하거나 규칙으로 정하지 않는다.
 
 ## 무엇이 깔리나
@@ -82,7 +82,7 @@ my-project/
 
 ## guard hook이 막는 것
 
-부탁이 아니라 동작으로 막는다. Claude 전용이다.
+부탁이 아니라 동작으로 막는다. Claude는 아래 전부, Codex는 삭제 확인을 뺀 차단만 한다 (신뢰해야 켜짐).
 
 | 상황 | 동작 |
 |---|---|
@@ -107,7 +107,7 @@ my-project/
 
 ## 요구 사항
 
-- Claude Code
+- Claude Code 또는 Codex
 - Python 3 (`python` 또는 `python3`)
 - git
 - 선택: `gh` (PR 생성 · 병합). 없으면 설치와 `gh auth login`을 안내하고 PR 단계는 보류한다.
